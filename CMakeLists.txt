@@ -1,0 +1,27 @@
+cmake_minimum_required(VERSION 3.8)
+project(Deformation)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -g")
+
+include_directories(${PROJECT_SOURCE_DIR})
+set(SOURCE_FILES camera.h camera.cpp main.cpp mesh.h mesh.cpp model.h model.cpp resource_manager.h resource_manager.cpp shader.h shader.cpp texture.h stb_image.cpp stb_image.h texture.cpp test.cpp)
+aux_source_directory(graph SOURCE_FILES)
+add_executable(Deformation ${SOURCE_FILES})
+
+if (APPLE)
+    target_link_libraries(Deformation -L/usr/local/lib -I/usr/local/include -lASSIMP -lGLEW -lglfw3 "-framework OpenGL" "-framework Cocoa" "-framework IOKit" "-framework CoreVideo")
+endif ()
+
+if (UNIX AND NOT APPLE)
+    find_package(OpenGL REQUIRED)
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(GLFW REQUIRED glfw3)
+    find_package(GLEW REQUIRED)
+    find_package(glm REQUIRED)
+    include_directories(${GLFW_INCLUDE_DIRS})
+    include_directories(${GLEW_INCLUDE_DIRS})
+    add_definitions(-DGLEW_STATIC)
+    include_directories(${GLM_INCLUDE_DIRS})
+    target_link_libraries(Deformation ${OPENGL_LIBRARY} ${GLFW_STATIC_LIBRARIES} ${GLEW_LIBRARIES} -lassimp)
+endif ()
