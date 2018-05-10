@@ -73,7 +73,8 @@ glm::vec3 Node::transformPosition(glm::vec3 vpos)
 
 glm::vec3 Node::transformNormal(glm::vec3 normal)
 {
-	if(transformed){
+	if(transformed)
+	{
 		std::cout << "transform normal:" << std::endl;
 		print(normal);
 		print(glm::inverse(rotation)[0]);
@@ -82,7 +83,8 @@ glm::vec3 Node::transformNormal(glm::vec3 normal)
 		print(glm::inverse(rotation) * normal);
 		return glm::inverse(rotation) * normal;
 	}
-	else{
+	else
+	{
 		std::cout << "non-transform normal:" << std::endl;
 		print(normal);
 		return normal;
@@ -105,7 +107,7 @@ float Node::getRot()
 	float c11 = glm::dot(c1, c1);
 	float c22 = glm::dot(c2, c2);
 	float c33 = glm::dot(c3, c3);
-	return (c12 * c12 + c13 * c13 + c23 * c23 
+	return (c12 * c12 + c13 * c13 + c23 * c23
 		 + (c11 - 1.0f) * (c11 - 1.0f) + (c22 - 1.0f) * (c22 - 1.0f) + (c33 - 1.0f) * (c33 - 1.0f));
 }
 
