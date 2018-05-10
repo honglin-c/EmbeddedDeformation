@@ -89,16 +89,16 @@ glm::vec3 Node::transformNormal(glm::vec3 normal)
 	}
 }
 
-void Node::addNeighbor(const Node * n)
+void Node::addNeighbor(Node * n)
 {
 	neighbors.insert(n);
 }
 
 float Node::getRot()
 {
-	glm::vec3 c1 = glm::col(rotation, 0);
-	glm::vec3 c2 = glm::col(rotation, 1);
-	glm::vec3 c3 = glm::col(rotation, 2);
+	glm::vec3 c1 = glm::column(rotation, 0);
+	glm::vec3 c2 = glm::column(rotation, 1);
+	glm::vec3 c3 = glm::column(rotation, 2);
 	float c12 = glm::dot(c1, c2);
 	float c13 = glm::dot(c1, c3);
 	float c23 = glm::dot(c2, c3);

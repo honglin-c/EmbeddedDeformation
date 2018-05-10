@@ -3,6 +3,7 @@
 
 #include <glm/vec3.hpp>
 #include <glm/mat3x3.hpp>
+#include <glm/gtc/matrix_access.hpp>
 #include <set>
 
 
@@ -31,7 +32,7 @@ public:
 
     glm::vec3 transformNormal(glm::vec3 normal);
 
-    void addNeighbor(const Node * n);
+    void addNeighbor(Node * n);
 
     float getRot();
 
