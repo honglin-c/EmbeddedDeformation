@@ -23,13 +23,13 @@ void AABB::setAABB(GLfloat MinX, GLfloat MaxX, GLfloat MinY, GLfloat MaxY, GLflo
     posZ = MaxZ + FLT_EPSILON;
 }
 
-void AABB::splitAABB(int axis, AABB &left, AABB &right)
+void AABB::splitAABB(int axis, GLfloat splitPlane, AABB &left, AABB &right)
 {
     if(axis == KdNode::X_AXIS)
     {    
         left.negX = negX;
-        left.posX = (negX + posX) / 2.0f;
-        right.negX = (negX + posX) / 2.0f + FLT_EPSILON;
+        left.posX = splitPlane;
+        right.negX = splitPlane + FLT_EPSILON;
         right.posX = posX;
     }
     else
@@ -43,8 +43,8 @@ void AABB::splitAABB(int axis, AABB &left, AABB &right)
     if(axis == KdNode::Y_AXIS)
     {    
         left.negY = negY;
-        left.posY = (negY + posY) / 2.0f;
-        right.negY = (negY + posY) / 2.0f + FLT_EPSILON;
+        left.posY = splitPlane;
+        right.negY = splitPlane + FLT_EPSILON;
         right.posY = posY;
     }
     else
@@ -58,8 +58,8 @@ void AABB::splitAABB(int axis, AABB &left, AABB &right)
     if(axis == KdNode::Z_AXIS)
     {    
         left.negZ = negZ;
-        left.posZ = (negZ + posZ) / 2.0f;
-        right.negZ = (negZ + posZ) / 2.0f + FLT_EPSILON;
+        left.posZ = splitPlane;
+        right.negZ = splitPlane + FLT_EPSILON;
         right.posZ = posZ;
     }
     else
@@ -81,4 +81,11 @@ GLfloat AABB::getSplitPlane(int axis)
 	else if (axis == KdNode::Z_AXIS)
 		plane =  (posZ + negZ) / 2.0f;
 	return plane;
+}
+
+bool AABB::isInside(glm::vec3 position) const
+{
+    return (position[0] < posX && position[0] > negX 
+         && position[1] < posY && position[1] > negY 
+         && position[2] < posZ && position[2] > negZ);
 }

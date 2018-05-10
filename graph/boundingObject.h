@@ -25,8 +25,9 @@ public:
     AABB(){}
     ~AABB(){}
     void setAABB(GLfloat MinX, GLfloat MaxX, GLfloat MinY, GLfloat MaxY, GLfloat MinZ, GLfloat MaxZ);
-    void splitAABB(int axis, AABB &left, AABB &right);
+    void splitAABB(int axis, GLfloat splitPlane, AABB &left, AABB &right);
     GLfloat getSplitPlane(int axis);
+    bool isInside(glm::vec3 position) const;
 
     GLfloat posX;
     GLfloat negX;

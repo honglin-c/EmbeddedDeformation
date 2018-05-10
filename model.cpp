@@ -48,6 +48,49 @@ void Model::Draw(Shader& shader)
         this->meshes[i].Draw(shader);
 }
 
+// Draw a model of vertices, triangulate all the neighboring vertices
+void Model::DrawVertices()
+{    
+    glEnable(GL_DEPTH_TEST);
+    // Combine the data of position and normal into the vertex.
+    struct drawVertex
+    {
+        glm::vec3 p;
+        glm::vec3 n;
+    };
+    std::cout << "deform vertices:" << vertices.size() << std::endl;
+
+    std::vector<drawVertex> vertexData;
+    for(auto v:vertices)
+    {
+        drawVertex dv = {3.5f * v.Position, v.Normal};
+        vertexData.push_back(dv);
+    }
+
+    // Set the model's VAO.
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(drawVertex), glm::value_ptr(vertexData[0].p),
+                 GL_STREAM_DRAW);
+
+    // Position attribute.
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(drawVertex), (const GLvoid *) 0);
+    glEnableVertexAttribArray(0);
+    // Normal attribute.
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(drawVertex), (const GLvoid *) (sizeof(glm::vec3)));
+    glEnableVertexAttribArray(1);
+
+    glDrawArrays(GL_POINTS, 0, vertexData.size());
+    // Unbind VAO.
+    glBindVertexArray(0);
+
+}
+
+
 vector<Vertex> Model::returnVertices()
 {
     vector<Vertex> vertices;
@@ -213,4 +256,9 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type,
         }
     }
     return textures;
+}
+
+void Model::setVertices(vector<Vertex> vertices)
+{
+    this->vertices = vertices;
 }

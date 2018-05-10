@@ -65,6 +65,9 @@ public:
     // Load a model from a .obj file.
     static void LoadModel(string objModelFile, string name);
 
+    // Load a model consisting of only vertices from a .obj file
+    static void LoadVertices(string objModelFile, string name);
+
     // Retrieves a stored model.
     static Model *GetModel(string name);
 

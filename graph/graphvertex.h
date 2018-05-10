@@ -4,23 +4,28 @@
 #include <glm/glm.hpp>
 #include <vector>
 class Node;
-
-typedef struct _VertexNode {
-	Node * node;
-	float weight;
-}VertexNode;
+struct Vertex;
 
 class GraphVertex {
 public:
 	GraphVertex();
 	GraphVertex(glm::vec3 _position);
+	GraphVertex(struct Vertex _vertex);
 	~GraphVertex();
-	void setPosition(glm::vec3 _position);
-	void setVertexNode(std::vector<VertexNode> _nodes);
+	void setPositionAndNormal(glm::vec3 _position, glm::vec3 _normal);
+	glm::vec3 getPosition() const;
+	glm::vec3 getNormal() const;
+	void setNodes(std::vector<Node *> _nodes, std::vector<float> _weights);
 	void updatePosition();
-private:
+	std::vector<Node *> getNodes();
+	std::vector<float> getWeights();
+	void updateNeighbor();
+
+//private:
 	glm::vec3 position;
-	std::vector<VertexNode> nodes;
+	glm::vec3 normal;
+	std::vector<Node *> nodes;
+	std::vector<float> weights;
 };
 
 #endif

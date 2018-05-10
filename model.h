@@ -26,10 +26,14 @@ public:
     // Draws the model, and thus all its meshes
     virtual void Draw(Shader& shader);
 
+    virtual void DrawVertices();
+
     // Default constructor.
     Model();
 
     vector<Vertex> returnVertices();
+
+    void setVertices(vector<Vertex> vertices);
 
 private:
     /*  Model Data  */

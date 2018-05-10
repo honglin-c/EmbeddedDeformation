@@ -11,6 +11,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/orthonormalize.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/mat3x3.hpp>
+#include <glm/vec3.hpp>
 // Framework
 #include "stb_image.h"
 #include "camera.h"
@@ -18,6 +20,11 @@
 #include "shader.h"
 #include "resource_manager.h"
 
+// Deformation Graph
+#include "graph/deformGraph.h"
+#include "graph/graphvertex.h"
+#include "graph/node.h"
+#include "graph/boundingObject.h"
 
 // Function prototypes.
 void optionInit(GLFWwindow *window);
@@ -38,6 +45,16 @@ void display();
 // Simulate.
 void simulate();
 
+// Deform the graph
+void deformGraph();
+
+// Deform the model
+void doDeformation();
+
+void print(glm::vec3 &v)
+{
+    std::cout << v[0] << ", " << v[1] << ", " << v[2] << std::endl;
+}
 
 bool keys[1024];
 GLfloat lastX = 400, lastY = 300;
@@ -54,13 +71,15 @@ glm::vec3 catPos(0.0f, 0.0f, 0.0f);
 GLFWwindow *window;
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
-
 // Window size.
 int WIDTH, HEIGHT;
 GLuint width = 1280, height = 720;
 
+// Deformation Graph
+DeformGraph * dgraph = nullptr;
+
 // Start our application and run our Application loop.
-int _main()
+int main()
 {
     // Init GLFW.
     glfwInit();
@@ -126,6 +145,13 @@ int _main()
     // Do some initialization for our application (include loading shaders, models, etc.)
     shaderModelInit();
 
+    // Initialize the deform graph
+    deformGraph();
+
+    doDeformation();
+
+
+
     // Loop.
     while (!glfwWindowShouldClose(window))
     {
@@ -154,6 +180,9 @@ int _main()
 
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
+
+    delete dgraph;
+
     return 0;
 }
 
@@ -277,7 +306,6 @@ void display()
     phong.SetFloat("material.shininess", 0.3f);
     Model *catModel = ResourceManager::GetModel("cat");
     catModel->Draw(phong);
-    catModel->returnVertices();
 
     Shader color = ResourceManager::GetShader("color");
     color.Use();
@@ -291,12 +319,13 @@ void display()
     color.SetMatrix4("scaling", scaling);
 
     Sample *sample = ResourceManager::GetSample("cat");
-        // Draw cloth particles.
+
+    // Draw sample particles.
     bool drawParticle = true;
     if (sample == NULL)
         std::cout << "cannot find the sample" << std::endl;
-    else 
-    {   
+    else
+    {
         if (drawParticle)
         {
             std::cout << "sample size:" << sample->size() << std::endl;
@@ -322,8 +351,76 @@ void display()
         }
     }
 
+    // Draw the deform model
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    model = glm::mat4();
+    model = glm::translate(model, catPos);
+    phong.SetMatrix4("model", model);
+    // Set material properties.
+    phong.SetVector3f("material.ambient", glm::vec3(0.0f, 1.0f, 0.0f));
+    phong.SetVector3f("material.diffuse", glm::vec3(0.0f, 1.0f, 0.0f));
+    phong.SetVector3f("material.specular", glm::vec3(0.0f, 1.0f, 0.0f));
+    phong.SetFloat("material.shininess", 0.3f);
+    Model *deformModel = ResourceManager::GetModel("deform");
+    deformModel->DrawVertices();
+
+    // draw the graph
+    // dgraph->draw();
+
 }
 
 void simulate()
 {
 }
+
+void deformGraph()
+{
+    Model *catModel = ResourceManager::GetModel("cat");
+    vector<Vertex> vertices = catModel->returnVertices();
+    vector<GraphVertex *> gvertices;
+
+    for(auto v:vertices)
+    {
+        gvertices.push_back(new GraphVertex(v));
+    }
+
+    vector<Node *> gnodes;
+    std::vector<glm::vec3> *sample = ResourceManager::GetSample("cat");
+    for(auto s:(*sample))
+    {
+        gnodes.push_back(new Node(s));
+    }
+
+    dgraph = new DeformGraph(gvertices, gnodes);
+    dgraph->print();
+}
+
+void doDeformation()
+{
+    AABB aabb;
+    aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232);
+
+    float sin45, cos45;
+    sin45 = cos45 = std::sqrt(2.0f) / 2.0f;
+    // glm::mat3 rotation(cos45,  0.0f,  sin45,
+    //                    0.0f,   1.0f,  0.0f,
+    //                    -sin45, 0.0f,  cos45);
+    glm::mat3 rotation(1.0f, 0.0f, 0.0f,
+                       0.0f, 1.0f, 0.0f,
+                       0.0f, 0.0f, 1.0f);
+    glm::vec3 translation(0.1f, 0.1f, 0.1f);
+
+    std::cout << "rotation inv:" << std::endl;
+    glm::mat3 inverse = glm::inverse(rotation);
+    print(inverse[0]);
+    print(inverse[1]);
+    print(inverse[2]);
+
+    dgraph->applyTransformation(rotation, translation, aabb);
+    dgraph->outputToFile();
+
+    // Load deform model
+    ResourceManager::LoadVertices(_MODEL_PREFIX_"/deform/cat.obj", "deform");
+
+}
+

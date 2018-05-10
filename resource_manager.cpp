@@ -12,6 +12,7 @@
 #include <sstream>
 #include <fstream>
 #include "stb_image.h"
+#include "mesh.h"
 
 // Instantiate static variables.
 std::unordered_map<std::string, Shader>    ResourceManager::Shaders;
@@ -254,4 +255,51 @@ Sample * ResourceManager::GetSample(const string &name)
     return sample;
 }
 
+// Load a model consisting of only vertices from a .obj file
+void ResourceManager::LoadVertices(string objModelFile, string name)
+{
+    try
+    {
+        Model *model = new Model();
+        std::ifstream fin;
+        fin.exceptions(std::ifstream::badbit);
+        std::cout << "open " << objModelFile << std::endl;
+        fin.open(objModelFile);
+        float x, y, z;
+        string line_header;
+        vector<glm::vec3> positions, normals;
+    
+        while(fin >> line_header)
+        {
+            if(line_header == "v" || line_header == "vn"){
+                fin >> x >> y >> z;
+                std::cout << "header: " << line_header << " " << x << " " << y << " " << z << std::endl;
+                if(line_header == "v")
+                    positions.push_back(glm::vec3(x, y, z));
+                else
+                    normals.push_back(glm::vec3(x, y, z));
+            }
+            else{
+                std::cout << "non-header: " << line_header << std::endl;
+            }
+        }
+        fin.close();
+
+        std::cout << "deform vertices size: " << positions.size() << std::endl;
+        vector<Vertex> vertices;
+        assert(positions.size() == normals.size());
+        for(int i = 0; i < positions.size(); i++)
+        {
+            Vertex v = {positions[i], normals[i]};
+            vertices.push_back(v);
+        }
+        model->setVertices(vertices);
+
+        Models[name] = model;
+    }
+    catch (std::exception e)
+    {
+        std::cout << "ERROR::LoadModel Failed to read model files::" << e.what() << std::endl;
+    }    
+}
 

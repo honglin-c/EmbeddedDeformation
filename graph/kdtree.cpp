@@ -22,12 +22,12 @@ bool KdTree::compareNode(Node * a, Node * b)
 
 KdNode * KdTree::buildKdTree(std::vector<Node *> nodes, AABB aabb, int depth = 0)
 {
-	cout << "depth: " << depth << endl;
-	for(auto t:nodes){
-		glm::vec3 pos = t->getPosition();
-		cout << pos[0] << "," << pos[1] << "," << pos[2] << " ";
-	}
-	cout << endl;
+	// cout << "depth: " << depth << endl;
+	// for(auto t:nodes){
+	// 	glm::vec3 pos = t->getPosition();
+	// 	cout << pos[0] << "," << pos[1] << "," << pos[2] << " ";
+	// }
+	// cout << endl;
 	// Empty node list
 	if(nodes.size() == 0)
 		return nullptr;
@@ -38,6 +38,7 @@ KdNode * KdTree::buildKdTree(std::vector<Node *> nodes, AABB aabb, int depth = 0
 		leafnode->setLeaf(nodes.front());
 		leafnode->setNodeBoundingVolume(aabb);
 		if(depth == 0) this->rootNode = leafnode;
+		print(leafnode);
 		return leafnode;
 	}
 
@@ -62,7 +63,7 @@ KdNode * KdTree::buildKdTree(std::vector<Node *> nodes, AABB aabb, int depth = 0
 
 	// Create a split node
 	AABB leftaabb, rightaabb;
-	aabb.splitAABB(axis, leftaabb, rightaabb);
+	aabb.splitAABB(axis, plane, leftaabb, rightaabb);
 
 	KdNode * leftchild = buildKdTree(leftList, leftaabb, depth + 1);
 	KdNode * rightchild = buildKdTree(rightList, rightaabb, depth + 1);
@@ -73,7 +74,7 @@ KdNode * KdTree::buildKdTree(std::vector<Node *> nodes, AABB aabb, int depth = 0
 	vnode->setNodeBoundingVolume(aabb);
 	vnode->setSplitPlane(axis, plane);
 
-	print(vnode);
+	// print(vnode);
 
 	if(depth == 0)
 		this->rootNode = vnode;
@@ -83,7 +84,7 @@ KdNode * KdTree::buildKdTree(std::vector<Node *> nodes, AABB aabb, int depth = 0
 
 std::vector<Node *> KdTree::kNearestNeighborSearch(glm::vec3 pos)
 {
-	std::priority_queue<Node *, std::vector<Node *>, distCompare> heap(distCompare(pos));
+	std::priority_queue<Node *, std::vector<Node *>, distCompare> heap(pos);
 	this->kNearestNeighborSearch(pos, this->rootNode, heap, Infinity);
 
 	std::vector<Node *> res;
@@ -98,7 +99,10 @@ std::vector<Node *> KdTree::kNearestNeighborSearch(glm::vec3 pos)
 	return res;
 }
 
-void KdTree::kNearestNeighborSearch(glm::vec3 pos, KdNode * kdnode, std::priority_queue<Node *> &heap, GLfloat dist)
+void KdTree::kNearestNeighborSearch(const glm::vec3 pos, 
+									KdNode * kdnode, 
+									std::priority_queue<Node *, std::vector<Node *>, distCompare> &heap, 
+									GLfloat dist)
 {
 	if(kdnode->leaf)
 	{
@@ -106,19 +110,19 @@ void KdTree::kNearestNeighborSearch(glm::vec3 pos, KdNode * kdnode, std::priorit
 		return;
 	}
 
-	if(dist == Inifinity)
+	if(dist == Infinity)
 	{
 		if(pos[kdnode->axis] <= kdnode->splitPlane)
 		{
 			kNearestNeighborSearch(pos, kdnode->leftChild, heap, dist);
-			dist = glm::length(heap.top().getPosition() - pos);
+			dist = glm::length(heap.top()->getPosition() - pos);
 			if(pos[kdnode->axis] + dist > kdnode->splitPlane)
 				kNearestNeighborSearch(pos, kdnode->rightChild, heap, dist);
 		}
 		else
 		{
 			kNearestNeighborSearch(pos, kdnode->rightChild, heap, dist);
-			dist = glm::length(heap.top().getPosition() - pos);
+			dist = glm::length(heap.top()->getPosition() - pos);
 			if(pos[kdnode->axis] - dist <= kdnode->splitPlane)
 				kNearestNeighborSearch(pos, kdnode->leftChild, heap, dist);
 		}
@@ -128,12 +132,12 @@ void KdTree::kNearestNeighborSearch(glm::vec3 pos, KdNode * kdnode, std::priorit
 		if(pos[kdnode->axis] - dist <= kdnode->splitPlane)
 		{
 			kNearestNeighborSearch(pos, kdnode->leftChild, heap, dist);
-			dist = glm::length(heap.top().getPosition() - pos);			
+			dist = glm::length(heap.top()->getPosition() - pos);			
 		}
-		else
+		if(pos[kdnode->axis] + dist > kdnode->splitPlane)
 		{
 			kNearestNeighborSearch(pos, kdnode->rightChild, heap, dist);
-			dist = glm::length(heap.top().getPosition() - pos);		
+			dist = glm::length(heap.top()->getPosition() - pos);		
 		}
 	}
 }
@@ -149,6 +153,7 @@ void KdTree::print(KdNode * node)
 	if(node == nullptr)
 		return;
 	cout << axisname[node->axis] <<  " " << node->splitPlane << endl;
+	cout << node->node->getPosition()[0] << " " << node->node->getPosition()[1] << " " << node->node->getPosition()[2] << endl;
 	cout << "left child:" << (node->leftChild == nullptr) << endl;
 	this->print(node->leftChild);
 	cout << "right child:" << (node->rightChild == nullptr) << endl;
