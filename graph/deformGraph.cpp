@@ -236,3 +236,15 @@ void DeformGraph::applyTransformation(glm::mat3 &rotation, glm::vec3 &translatio
 	}
 }
 
+void DeformGraph::addFixedConstraint(AABB &aabb)
+{
+	for(auto v:vertices)
+	{
+		if(aabb.isInside(v->getPosition()))
+		{
+			v->setFixed(true);
+		}
+	}
+}
+
+

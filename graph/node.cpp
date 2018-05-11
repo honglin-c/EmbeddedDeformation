@@ -123,10 +123,3 @@ float Node::getReg()
 	}
 	return reg;
 }
-
-float Node::getCon()
-{
-	return 0.0f;
-}
-
-

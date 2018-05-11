@@ -20,12 +20,23 @@ public:
 	std::vector<Node *> getNodes();
 	std::vector<float> getWeights();
 	void updateNeighbor();
+	void setFixed(bool is_fixed);
+
+	void userSetPosition(glm::vec3 _user_position);
+
+	// Constraint term
+	float getCon();
+
 
 //private:
 	glm::vec3 position;
 	glm::vec3 normal;
 	std::vector<Node *> nodes;
 	std::vector<float> weights;
+	bool isFixed;
+
+	glm::vec3 user_position;
+	bool isHandled; // if it is a constrainted vertex handled by the user
 };
 
 #endif

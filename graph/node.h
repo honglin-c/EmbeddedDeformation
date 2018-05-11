@@ -34,18 +34,18 @@ public:
 
     void addNeighbor(Node * n);
 
+    // Rotation term
     float getRot();
 
+    // Regularization term
     float getReg();
 
-    float getCon();
-
 private:
-	bool transformed;
+	bool transformed; // if the node has been transformed
 	glm::vec3 position;
 	glm::mat3 rotation;
 	glm::vec3 translation;
-	std::set<Node *> neighbors;
+	std::set<Node *> neighbors; // Neighbor nodes
 
 };
 

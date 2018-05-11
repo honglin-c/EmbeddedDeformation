@@ -6,7 +6,7 @@
 #include <glm/vec3.hpp>
 
 #include "node.h"
-#include "graphvertex.h"
+#include "graphVertex.h"
 #include "boundingObject.h"
 
 class DeformGraph
@@ -18,6 +18,7 @@ public:
 
 	// Transform the vertices within a aabb
 	void applyTransformation(glm::mat3 &rotation, glm::vec3 &translation, AABB &aabb);
+	void addFixedConstraint(AABB &aabb);
 	void update();
 	void draw();
 	void outputToFile();

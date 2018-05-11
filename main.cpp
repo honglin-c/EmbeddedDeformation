@@ -22,7 +22,7 @@
 
 // Deformation Graph
 #include "graph/deformGraph.h"
-#include "graph/graphvertex.h"
+#include "graph/graphVertex.h"
 #include "graph/node.h"
 #include "graph/boundingObject.h"
 
