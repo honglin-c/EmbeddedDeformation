@@ -150,8 +150,6 @@ int main()
 
     doDeformation();
 
-
-
     // Loop.
     while (!glfwWindowShouldClose(window))
     {
@@ -397,9 +395,6 @@ void deformGraph()
 
 void doDeformation()
 {
-    AABB aabb;
-    aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232);
-
     float sin45, cos45;
     sin45 = cos45 = std::sqrt(2.0f) / 2.0f;
     // glm::mat3 rotation(cos45,  0.0f,  sin45,
@@ -416,8 +411,22 @@ void doDeformation()
     print(inverse[1]);
     print(inverse[2]);
 
+    // transform tail
+    AABB aabb;
+    aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232);
+
     dgraph->applyTransformation(rotation, translation, aabb);
+
+    // tranform head
+    aabb.setAABB(-0.1678, 0.171623, 0.022794, 0.700577, 0.689812, 0.973195);
+    translation = glm::vec3(0.5f, 0.5f, 0.5f);
+
+    dgraph->applyTransformation(rotation, translation, aabb);
+
+    dgraph->optimize();
+
     dgraph->outputToFile();
+
 
     // Load deform model
     ResourceManager::LoadVertices(_MODEL_PREFIX_"/deform/cat.obj", "deform");

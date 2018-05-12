@@ -5,11 +5,18 @@
 GraphVertex::GraphVertex(): isFixed(false), isHandled(false)
 {}
 
-GraphVertex::GraphVertex(glm::vec3 _position):position(_position), isFixed(false), isHandled(false)
+GraphVertex::GraphVertex(glm::vec3 _position):position(_position), 
+											  position_init(_position),
+											  isFixed(false), 
+											  isHandled(false)
 {}
 
-GraphVertex::GraphVertex(struct Vertex _vertex):position(_vertex.Position), normal(_vertex.Normal), 
-												isFixed(false), isHandled(false)
+GraphVertex::GraphVertex(struct Vertex _vertex):position(_vertex.Position),
+												normal(_vertex.Normal), 
+												position_init(_vertex.Position),
+												normal_init(_vertex.Normal), 
+												isFixed(false), 
+												isHandled(false)
 {}
 
 GraphVertex::~GraphVertex()
@@ -78,7 +85,7 @@ void GraphVertex::setFixed(bool is_fixed)
 	isFixed = is_fixed;
 }
 
-float GraphVertex::getCon()
+float GraphVertex::getConValue()
 {
 	if(!isFixed && isHandled)
 		return glm::length(position - user_position);
@@ -90,10 +97,24 @@ void GraphVertex::userSetPosition(glm::vec3 _user_position)
 {
 	if(!isFixed)
 	{
-		position = user_position = _user_position;
+		position_init = position = user_position = _user_position;
 		isHandled = true;
 	}
 }
+
+
+// Get vertex's [ture position - user-specific position]
+Vector3f GraphVertex::getConTerm()
+{
+	if(!isFixed && isHandled)
+	{
+		glm::vec3 conTerm = position - user_position;
+		return Vector3f(conTerm[0], conTerm[1], conTerm[2]);
+	}
+	else
+		return Vector3f(0.0f, 0.0f, 0.0f);
+}
+
 
 
 

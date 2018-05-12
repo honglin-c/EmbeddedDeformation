@@ -69,7 +69,7 @@ public:
     static void LoadVertices(string objModelFile, string name);
 
     // Retrieves a stored model.
-    static Model *GetModel(string name);
+    static Model * GetModel(string name);
 
     // Load a sample from a .obj file.
     static void LoadSample(const string &sampleFile, const string& name);

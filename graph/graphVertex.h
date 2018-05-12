@@ -3,6 +3,12 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <Eigen/Dense>
+
+using Eigen::Vector3f;
+using Eigen::VectorXf;
+using Eigen::Matrix3f;
+
 class Node;
 struct Vertex;
 
@@ -25,10 +31,16 @@ public:
 	void userSetPosition(glm::vec3 _user_position);
 
 	// Constraint term
-	float getCon();
+	float getConValue();
+
+	// Get vertex's [ture position - user-specific position]
+	Vector3f getConTerm();
+
 
 
 //private:
+	glm::vec3 position_init; // initial position and vertex
+	glm::vec3 normal_init;
 	glm::vec3 position;
 	glm::vec3 normal;
 	std::vector<Node *> nodes;

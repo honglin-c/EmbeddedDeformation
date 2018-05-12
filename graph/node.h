@@ -5,7 +5,12 @@
 #include <glm/mat3x3.hpp>
 #include <glm/gtc/matrix_access.hpp>
 #include <set>
+#include <Eigen/Dense>
 
+using Eigen::Vector3f;
+using Eigen::VectorXf;
+using Eigen::MatrixXf;
+using Eigen::Matrix3f;
 
 class Node
 {
@@ -18,9 +23,15 @@ public:
 
     ~Node();
 
+    void addDeltaRotation(glm::mat3 delta);
+
+    void addDeltaTranslation(glm::vec3 delta);
+
     void setPosition(glm::vec3 _position);
 
     glm::vec3 getPosition() const;
+
+    Matrix3f matRotation() const;
 
     glm::vec3 getTranslation() const;
 
@@ -34,11 +45,22 @@ public:
 
     void addNeighbor(Node * n);
 
-    // Rotation term
-    float getRot();
+    std::set<Node *> getNeighbors();
 
-    // Regularization term
-    float getReg();
+    // Rotation term: not currently used
+    float getRotValue();
+
+    // Regularization term: not currently used
+    float getRegValue();
+
+    // Get [(c1*c2) (c1*c3) (c2*c3) (c1*c1-1) (c2*c2-1) (c3*c3-1)]
+    VectorXf getRotTerm();
+
+    // Get all neighbor's [Rj * (gk - gj) + gj + tj - (gk + tk)]
+    MatrixXf getRegTerm();
+
+    // Get a certain neighbor's [Rj * (gk - gj) + gj + tj - (gk + tk)]
+    Vector3f getRegTerm(Node * neighbor);
 
 private:
 	bool transformed; // if the node has been transformed
