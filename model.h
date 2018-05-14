@@ -29,9 +29,11 @@ public:
     virtual void DrawVertices();
 
     // Default constructor.
-    Model();
+    // Model();
 
-    vector<Vertex> returnVertices();
+    vector<Vertex> returnMeshVertices(int mesh_i);
+
+    void setMeshVertices(int mesh_i, vector<Vertex> vertices);
 
     void setVertices(vector<Vertex> vertices);
 

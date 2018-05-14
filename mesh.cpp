@@ -88,3 +88,8 @@ void Mesh::setupMesh()
 
     glBindVertexArray(0);
 }
+
+void Mesh::updateMesh()
+{
+    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW);
+}

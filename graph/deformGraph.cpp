@@ -135,6 +135,18 @@ void DeformGraph::outputToFile()
 	fout.close();
 }
 
+vector<Vertex> DeformGraph::returnVertices()
+{
+	vector<Vertex> ret;
+	for(auto v:vertices)
+	{
+		Vertex rv = {3.5f * v->position, v->normal};
+		ret.push_back(rv);
+	}
+	return ret;
+}
+
+
 
 void DeformGraph::draw()
 {
@@ -597,5 +609,6 @@ float DeformGraph::exactLineSearch()
 {
 
 }
+
 
 

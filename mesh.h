@@ -49,6 +49,8 @@ public:
     // Render the mesh.
     void Draw(const Shader& shader);
 
+    void updateMesh();
+
 private:
     /*  Render data  */
     GLuint VAO, VBO, EBO;

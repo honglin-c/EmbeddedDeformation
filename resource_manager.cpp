@@ -260,7 +260,7 @@ void ResourceManager::LoadVertices(string objModelFile, string name)
 {
     try
     {
-        Model *model = new Model();
+        Model *model = new Model("objModelFile");
         std::ifstream fin;
         fin.exceptions(std::ifstream::badbit);
         std::cout << "open " << objModelFile << std::endl;

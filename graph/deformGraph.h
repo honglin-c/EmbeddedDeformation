@@ -8,11 +8,12 @@
 #include <glm/vec3.hpp>
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
-#include<Eigen/SparseCholesky>
+#include <Eigen/SparseCholesky>
 
 #include "node.h"
 #include "graphVertex.h"
 #include "boundingObject.h"
+#include "../mesh.h"
 
 typedef Eigen::SparseMatrix<float> SparseMf;
 
@@ -41,6 +42,8 @@ public:
 
 	// Optimized by Gauss-Newton method
 	void optimize();
+
+	vector<Vertex> returnVertices();
 
 private:
 	const int k = 4;

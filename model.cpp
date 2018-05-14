@@ -30,6 +30,7 @@ GLint TextureFromFile(const char *path, string directory)
 
 // Constructor, expects a filepath to a 3D model.
 Model::Model(string path) :
+        directory(path),
         hitParam(0.0f),
         selectParam(false),
         translateVector(glm::vec3(0.0f)),
@@ -50,7 +51,7 @@ void Model::Draw(Shader& shader)
 
 // Draw a model of vertices, triangulate all the neighboring vertices
 void Model::DrawVertices()
-{    
+{
     glEnable(GL_DEPTH_TEST);
     // Combine the data of position and normal into the vertex.
     struct drawVertex
@@ -91,25 +92,16 @@ void Model::DrawVertices()
 }
 
 
-vector<Vertex> Model::returnVertices()
-{
-    vector<Vertex> vertices;
-    for (GLuint i = 0; i < this->meshes.size(); i++)
-        vertices.insert(vertices.end(), this->meshes[i].vertices.begin(), this->meshes[i].vertices.end());
-    // std::cout << "total vertices: "<< vertices.size() <<std::endl;
-    return vertices;
-}
-
 // Default constructor.
-Model::Model() :
-        hitParam(0.0f),
-        selectParam(false),
-        translateVector(glm::vec3(0.0f)),
-        pitch(0.0f),
-        yaw(0.0f),
-        roll(0.0f)
-{
-}
+// Model::Model() :
+//         hitParam(0.0f),
+//         selectParam(false),
+//         translateVector(glm::vec3(0.0f)),
+//         pitch(0.0f),
+//         yaw(0.0f),
+//         roll(0.0f)
+// {
+// }
 
 // Loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void Model::loadModel(string path)
@@ -128,6 +120,8 @@ void Model::loadModel(string path)
 
     // Process ASSIMP's root node recursively
     this->processNode(scene->mRootNode, scene);
+
+    cout << path << " " << scene->mNumMeshes << endl;
 }
 
 // Processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
@@ -181,7 +175,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
             vec.x = mesh->mTextureCoords[0][i].x;
             vec.y = mesh->mTextureCoords[0][i].y;
             vertex.TexCoords = vec;
-        } 
+        }
         else
             vertex.TexCoords = glm::vec2(0.0f, 0.0f);
         vertices.push_back(vertex);
@@ -256,6 +250,23 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type,
         }
     }
     return textures;
+}
+
+vector<Vertex> Model::returnMeshVertices(int mesh_i)
+{
+    cout << "directory: " << directory << endl;
+    cout << "mesh_i: " << mesh_i << " mesh size: " << this->meshes.size() << endl;
+    assert(mesh_i >= 0 && mesh_i < this->meshes.size());
+    return this->meshes[mesh_i].vertices;
+}
+
+void Model::setMeshVertices(int mesh_i, vector<Vertex> vertices)
+{
+    cout << "directory: " << directory << endl;
+    cout << "mesh_i: " << mesh_i << " mesh size: " << this->meshes.size() << endl;
+    assert(mesh_i >= 0 && mesh_i < this->meshes.size());
+    this->meshes[mesh_i].vertices = vertices;
+    this->meshes[mesh_i].updateMesh();
 }
 
 void Model::setVertices(vector<Vertex> vertices)
