@@ -287,6 +287,7 @@ void DeformGraph::optimize()
 {
 	updateOrder();
 	float Fx, Fx_old = 0.0f;
+  	SimplicialCholesky<SparseMf> chol;
 
 	VectorXf delta(x_order);
 	for(int i = 0; i < max_iter; i++)
@@ -296,7 +297,10 @@ void DeformGraph::optimize()
 		debug("1.1");
 		VectorXf fx = this->getfx();
 		debug("1.2");
-		delta = descentDirection(Jf, fx);
+		if(i == 0)
+			delta = descentDirection(Jf, fx, chol, true);
+		else
+			delta = descentDirection(Jf, fx, chol, false);
 		delta.normalize();
 
 		debug("2");
@@ -595,10 +599,13 @@ VectorXf DeformGraph::getfx()
 }
 
 // Implement symbolic factorization and fill-reducing later - use Eigen first
-VectorXf DeformGraph::descentDirection(SparseMf &Jf, VectorXf &fx)
+VectorXf DeformGraph::descentDirection(const SparseMf &Jf, const VectorXf &fx, SimplicialCholesky<SparseMf> &chol, bool symbolic)
 {
 	// Solving:
-  	SimplicialCholesky<SparseMf> chol(Jf.transpose() * Jf);
+  	SparseMf JfTJf = Jf.transpose() * Jf;
+  	if(symbolic)
+  		chol.analyzePattern(JfTJf);
+  	chol.factorize(JfTJf);
 	// performs a Cholesky factorizatison of A
   	VectorXf x = chol.solve(Jf.transpose() * fx);
 	// use the factorization to solve for the given right hand side

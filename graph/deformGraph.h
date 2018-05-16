@@ -73,7 +73,8 @@ private:
 
 	SparseMf getJf();
 	VectorXf getfx();
-	VectorXf descentDirection(SparseMf &Jf, VectorXf &fx);
+	VectorXf descentDirection(const SparseMf &Jf, const VectorXf &fx, SimplicialCholesky<SparseMf> &chol, bool symbolic);
+	// Golden Section Search - not currently working
 	float exactLineSearch();
 
 	// Get term[i] / norm2(term)

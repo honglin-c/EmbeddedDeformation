@@ -407,11 +407,12 @@ void deformGraph()
 
 void doDeformation()
 {
-    float sin45, cos45;
+    float sin45, cos45, sin90, cos90;
+    sin90 = 1.0f; cos90 = 0.0f;
     sin45 = cos45 = std::sqrt(2.0f) / 2.0f;
-    glm::mat3 rotation(cos45,  0.0f,  sin45,
+    glm::mat3 rotation(cos90,  0.0f,  sin90,
                        0.0f,   1.0f,  0.0f,
-                       -sin45, 0.0f,  cos45);
+                       -sin90, 0.0f,  cos90);
     // glm::mat3 rotation(1.0f, 0.0f, 0.0f,
     //                    0.0f, 1.0f, 0.0f,
     //                    0.0f, 0.0f, 1.0f);
