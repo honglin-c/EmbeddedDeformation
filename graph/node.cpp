@@ -56,7 +56,6 @@ void Node::setTransformation(glm::mat3 &_rotation, glm::vec3 &_translation)
 {
 	rotation = _rotation;
 	translation = _translation;
-	position = rotation * position + translation;
 	transformed = true;
 }
 

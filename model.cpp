@@ -64,7 +64,7 @@ void Model::DrawVertices()
     std::vector<drawVertex> vertexData;
     for(auto v:vertices)
     {
-        drawVertex dv = {3.5f * v.Position, v.Normal};
+        drawVertex dv = {v.Position, v.Normal};
         vertexData.push_back(dv);
     }
 

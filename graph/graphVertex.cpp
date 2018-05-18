@@ -85,6 +85,7 @@ void GraphVertex::setFixed(bool is_fixed)
 	isFixed = is_fixed;
 }
 
+// Deprecated
 float GraphVertex::getConValue()
 {
 	if(!isFixed && isHandled)

@@ -101,9 +101,9 @@ int main()
     glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-    window = glfwCreateWindow(mode->width, mode->height, "FlightX", monitor, nullptr);
+    window = glfwCreateWindow(mode->width, mode->height, "Embedded Deformation", monitor, nullptr);
 #else
-    window = glfwCreateWindow(width, height, "Cloth Simulator", nullptr, nullptr);
+    window = glfwCreateWindow(width, height, "Embedded Deformation", nullptr, nullptr);
 #endif
     glfwMakeContextCurrent(window);
 
@@ -410,13 +410,13 @@ void doDeformation()
     float sin45, cos45, sin90, cos90;
     sin90 = 1.0f; cos90 = 0.0f;
     sin45 = cos45 = std::sqrt(2.0f) / 2.0f;
-    glm::mat3 rotation(cos45,  0.0f,  sin45,
-                       0.0f,   1.0f,  0.0f,
-                       -sin45, 0.0f,  cos45);
-    // glm::mat3 rotation(1.0f, 0.0f, 0.0f,
-    //                    0.0f, 1.0f, 0.0f,
-    //                    0.0f, 0.0f, 1.0f);
-    glm::vec3 translation(0.1f, -1.0f, 0.1f);
+    // glm::mat3 rotation(cos45,  0.0f,  sin45,
+    //                    0.0f,   1.0f,  0.0f,
+    //                    -sin45, 0.0f,  cos45);
+    glm::mat3 rotation(1.0f, 0.0f, 0.0f,
+                       0.0f, 1.0f, 0.0f,
+                       0.0f, 0.0f, 1.0f);
+    glm::vec3 translation(1.0f, 1.0f, -1.0f);
 
     std::cout << "rotation inv:" << std::endl;
     glm::mat3 inverse = glm::inverse(rotation);

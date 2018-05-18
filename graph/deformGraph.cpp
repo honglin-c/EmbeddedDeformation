@@ -296,6 +296,7 @@ void DeformGraph::optimize()
 		SparseMf Jf = this->getJf();
 		debug("1.1");
 		VectorXf fx = this->getfx();
+		std::cout << i << "-th fx: " << std::endl;
 		std::cout << fx << std::endl;
 		debug("1.2");
 		if(i == 0)
@@ -362,8 +363,8 @@ void DeformGraph::updateOrder()
 	x_order = 12 * nodes.size();
 	fx_order = 6 * nodes.size();
 	for(auto n:nodes)
-		fx_order += n->getNeighbors().size();
-	fx_order += vertices.size();
+		fx_order += 3 * n->getNeighbors().size();
+	fx_order += 3 * vertices.size();
 }
 
 
@@ -429,6 +430,7 @@ SparseMf DeformGraph::getJf()
 // Ereg: row - from nodes.size() * 6 to nodes.size() * 6 + nodes.size() * neighbor(n).size()
 //===================================================================================================
 	int ni = 0, ci = 0;
+	int this_row, this_col;
 	row = nodes.size() * 6;
 	// iterate through nodes * N(nodes) rows
 	for(auto n_row:nodes) // derive n_row node's R -- nonzero when n_row == nodes[ci]
@@ -439,28 +441,28 @@ SparseMf DeformGraph::getJf()
 		{
 			Vector3f reg_k = n_row->getRegTerm(neighbor);
 			// iterate from Rni_11 to Rni_33
-
-			for(int rot_i = 0; rot_i < 3; rot_i++)
+			for(int rot_i = 0; rot_i < 3; rot_i ++)
 			{
 				for(int rot_j = 0; rot_j < 3; rot_j++)
 				{
-					col = ci * x_rt + 3 * rot_i + rot_j;
-					Jf.insert(row + neighbor_count, col) = dRegTerm(reg_k, rot_i)
-														* (neighbor->getPosition()[rot_j] - n_row->getPosition()[rot_j]);
+					this_row = row + 3 * neighbor_count + rot_i;
+					this_col = ci * x_rt + rot_i * 3 + rot_j;
+					Jf.insert(this_row, this_col) = (neighbor->getPosition() - n_row->getPosition())[rot_j];
 				}
 			}
 
 			// iterate through ti_1 to ti_3
 			for(int ti = 0; ti < 3; ti++)
 			{
-				col = ci * x_rt + 9 + ti;
-				Jf.insert(row + neighbor_count, col) = dRegTerm(reg_k, ti); // not consider t_k here
+				this_row = row + 3 * neighbor_count + ti;
+				this_col = ci * x_rt + 9 + ti;
+				Jf.insert(this_row, this_col) = 1.0f; // not consider t_k here
 			}
 
 			neighbor_count++;
 		}
 
-		row += n_row->getNeighbors().size();
+		row += 3 * n_row->getNeighbors().size();
 		ci++; // increase column index(ci-th node's R)
 	}
 
@@ -481,14 +483,16 @@ SparseMf DeformGraph::getJf()
 					col = ci * x_rt + 9;
 					for(int ti = 0; ti < 3; ti++)
 					{
-						Jf.insert(row + neighbor_count, col + ti) = -1.0f * dRegTerm(reg_k, ti);
+						this_row = row + 3 * neighbor_count + ti;
+						this_col = col + ti;
+						Jf.insert(this_row, this_col) = -1.0f;
 					}
 				}
 				ci++; // increase column index(ci-th node's R)
 			}
 			neighbor_count++;
 		}
-		row += n_row->getNeighbors().size();
+		row += 3 * n_row->getNeighbors().size();
 	}
 //===================================================================================================
 // Econ: row - from nodes.size() * (6 + N(nodes).size())
@@ -496,7 +500,7 @@ SparseMf DeformGraph::getJf()
 //===================================================================================================
 
 	debug("1.0.3");
-	// row is already set to nodes.size() * (6 + N(nodes).size())
+	// row is already set to nodes.size() * (6 + 3 * N(nodes).size())
 	for(auto v:vertices)
 	{
 		Vector3f conTerm = v->getConTerm();
@@ -515,47 +519,52 @@ SparseMf DeformGraph::getJf()
 					{
 						for(int rot_j = 0; rot_j < 3; rot_j++)
 						{
-							col = n_col_count * x_rt + 3 * rot_i + rot_j;
+							this_row = row + rot_i;
+							this_col = n_col_count * x_rt + 3 * rot_i + rot_j;
 							// std::cout << row << " " << col << std::endl;
-							Jf.insert(row, col) = dConTerm(conTerm, rot_i) * v->weights[vn_count]
-										 * (v->getPosition()[rot_j] - vn->getPosition()[rot_j]);
+							
+							Jf.insert(this_row, this_col) = v->weights[vn_count]
+										 * (v->getPosition() - vn->getPosition())[rot_j];
 						}
 					}
 
 					// derive t
 					for(int ti = 0; ti < 3; ti++)
 					{
-						col = n_col_count * x_rt + 9 + ti;
+						this_row = row + ti;
+						this_col = n_col_count * x_rt + 9 + ti;
 						// std::cout << row << " " << col << std::endl;
-						Jf.insert(row, col) = dConTerm(conTerm, ti) * v->weights[vn_count];
+						Jf.insert(this_row, this_col) = v->weights[vn_count];
 					}
 				}
 				n_col_count++;
 			}
 			vn_count++;
 		}
-		row++;
+		row += 3;
 	}
 	debug("1.0.4");
 
 	return Jf;
 }
 
-float DeformGraph::dRegTerm(Vector3f &regTerm, int i)
-{
-	assert(i >= 0 && i < 3);
-	if(regTerm.norm() == 0.0f)
-		return 0.0f;
-	return sqrt10 * regTerm(i) / std::sqrt(regTerm(0) * regTerm(0) + regTerm(1) * regTerm(1) + regTerm(2) * regTerm(2));
-}
+// // Deprecated
+// float DeformGraph::dRegTerm(Vector3f &regTerm, int i)
+// {
+// 	assert(i >= 0 && i < 3);
+// 	if(regTerm.norm() == 0.0f)
+// 		return 0.0f;
+// 	return sqrt10 * regTerm(i) / std::sqrt(regTerm(0) * regTerm(0) + regTerm(1) * regTerm(1) + regTerm(2) * regTerm(2));
+// }
 
-float DeformGraph::dConTerm(Vector3f &conTerm, int i)
-{
-	assert(i >= 0 && i < 3);
-	if(conTerm.norm() == 0.0f)
-		return 0.0f;
-	return 10 * conTerm(i) / std::sqrt(conTerm(0) * conTerm(0) + conTerm(1) * conTerm(1) + conTerm(2) * conTerm(2));
-}
+// // Deprecated
+// float DeformGraph::dConTerm(Vector3f &conTerm, int i)
+// {
+// 	assert(i >= 0 && i < 3);
+// 	if(conTerm.norm() == 0.0f)
+// 		return 0.0f;
+// 	return 10 * conTerm(i) / std::sqrt(conTerm(0) * conTerm(0) + conTerm(1) * conTerm(1) + conTerm(2) * conTerm(2));
+// }
 
 VectorXf DeformGraph::getfx()
 {
@@ -587,7 +596,10 @@ VectorXf DeformGraph::getfx()
 		regTerm = n->getRegTerm();
 		for(int i = 0; i < regTerm.rows(); i++)
 		{
-			fx[index++] = sqrt10 * regTerm.row(i).norm();
+			for(int j = 0; j < 3; j++)
+			{
+				fx[index++] = sqrt10 * regTerm(i, j);
+			}
 		}
 	}
 	debug("1.1.3");
@@ -595,7 +607,9 @@ VectorXf DeformGraph::getfx()
 	// Econ
 	for(auto v:vertices)
 	{
-		fx[index++] = 10.0f * v->getConValue();
+		VectorXf conTerm = v->getConTerm();
+		for(int j = 0; j < 3; j++)
+			fx[index++] = 10.0f * conTerm(j);
 	}
 
 	debug("1.1.4");

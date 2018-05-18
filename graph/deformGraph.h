@@ -47,7 +47,7 @@ public:
 
 private:
 	const int k = 4;
-	const int max_iter = 30;
+	const int max_iter = 6;
 	const float sqrt10 = 3.16227766;
 	const float epsilon = 1e-6;
 	const int x_rt = 12;
@@ -77,9 +77,9 @@ private:
 	// Golden Section Search - not currently working
 	float exactLineSearch();
 
-	// Get term[i] / norm2(term)
-	float dRegTerm(Vector3f &regTerm, int i);
-	float dConTerm(Vector3f &conTerm, int i);
+	// // Deprecated: Get term[i] / norm2(term)
+	// float dRegTerm(Vector3f &regTerm, int i);
+	// float dConTerm(Vector3f &conTerm, int i);
 
 	// Perform x_k+1 = x_k + delta
 	void updateNodesRt(VectorXf delta);
