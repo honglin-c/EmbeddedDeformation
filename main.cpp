@@ -352,17 +352,17 @@ void display()
     }
 
     // Draw the deform model
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    model = glm::mat4();
-    model = glm::translate(model, catPos);
-    phong.SetMatrix4("model", model);
-    // Set material properties.
-    phong.SetVector3f("material.ambient", glm::vec3(0.0f, 1.0f, 0.0f));
-    phong.SetVector3f("material.diffuse", glm::vec3(0.0f, 1.0f, 0.0f));
-    phong.SetVector3f("material.specular", glm::vec3(0.0f, 1.0f, 0.0f));
-    phong.SetFloat("material.shininess", 0.3f);
-    Model *deformModel = ResourceManager::GetModel("deform");
-    deformModel->DrawVertices();
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // model = glm::mat4();
+    // model = glm::translate(model, catPos);
+    // phong.SetMatrix4("model", model);
+    // // Set material properties.
+    // phong.SetVector3f("material.ambient", glm::vec3(0.0f, 1.0f, 0.0f));
+    // phong.SetVector3f("material.diffuse", glm::vec3(0.0f, 1.0f, 0.0f));
+    // phong.SetVector3f("material.specular", glm::vec3(0.0f, 1.0f, 0.0f));
+    // phong.SetFloat("material.shininess", 0.3f);
+    // Model *deformModel = ResourceManager::GetModel("deform");
+    // deformModel->DrawVertices();
 
     // Draw the deform model Cat that is directly deformed
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -410,13 +410,13 @@ void doDeformation()
     float sin45, cos45, sin90, cos90;
     sin90 = 1.0f; cos90 = 0.0f;
     sin45 = cos45 = std::sqrt(2.0f) / 2.0f;
-    glm::mat3 rotation(cos90,  0.0f,  sin90,
+    glm::mat3 rotation(cos45,  0.0f,  sin45,
                        0.0f,   1.0f,  0.0f,
-                       -sin90, 0.0f,  cos90);
+                       -sin45, 0.0f,  cos45);
     // glm::mat3 rotation(1.0f, 0.0f, 0.0f,
     //                    0.0f, 1.0f, 0.0f,
     //                    0.0f, 0.0f, 1.0f);
-    glm::vec3 translation(0.1f, 0.1f, 0.1f);
+    glm::vec3 translation(0.1f, -1.0f, 0.1f);
 
     std::cout << "rotation inv:" << std::endl;
     glm::mat3 inverse = glm::inverse(rotation);
@@ -426,22 +426,22 @@ void doDeformation()
 
     // transform tail
     AABB aabb;
-    aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232);
+    aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
+    // aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232);
 
     dgraph->applyTransformation(rotation, translation, aabb);
 
     // tranform head
-    aabb.setAABB(-0.1678, 0.171623, 0.022794, 0.700577, 0.689812, 0.973195);
-    translation = glm::vec3(0.0f, 0.0f, 0.0f);
+    // aabb.setAABB(-0.1678, 0.171623, 0.022794, 0.700577, 0.689812, 0.973195);
+    // translation = glm::vec3(0.0f, 0.0f, 0.0f);
 
-    dgraph->applyTransformation(rotation, translation, aabb);
+    // dgraph->applyTransformation(rotation, translation, aabb);
 
     dgraph->optimize();
 
     dgraph->outputToFile();
 
     // Try to deform another model directly
-
     Model *deformCatModel = ResourceManager::GetModel("deform_cat");
     deformCatModel->setMeshVertices(0, dgraph->returnVertices());
 

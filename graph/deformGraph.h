@@ -47,14 +47,14 @@ public:
 
 private:
 	const int k = 4;
-	const int max_iter = 6;
+	const int max_iter = 30;
 	const float sqrt10 = 3.16227766;
 	const float epsilon = 1e-6;
 	const int x_rt = 12;
 
 	int x_order;
 	int fx_order;
-	
+
 	std::vector<GraphVertex *> vertices;
 	std::vector<Node *> nodes;
 

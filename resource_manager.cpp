@@ -228,7 +228,7 @@ void ResourceManager::LoadSample(const string &sampleFile, const string &name)
         for(int i = 0; i < n; i++)
         {
             fin >> x >> y >> z;
-            std::cout << x << " " << y << " " << z << std::endl;
+            // std::cout << x << " " << y << " " << z << std::endl;
             sample->push_back(glm::vec3(x, y, z));
         }
         Samples[name] = sample;
@@ -273,7 +273,7 @@ void ResourceManager::LoadVertices(string objModelFile, string name)
         {
             if(line_header == "v" || line_header == "vn"){
                 fin >> x >> y >> z;
-                std::cout << "header: " << line_header << " " << x << " " << y << " " << z << std::endl;
+                // std::cout << "header: " << line_header << " " << x << " " << y << " " << z << std::endl;
                 if(line_header == "v")
                     positions.push_back(glm::vec3(x, y, z));
                 else
@@ -285,7 +285,7 @@ void ResourceManager::LoadVertices(string objModelFile, string name)
         }
         fin.close();
 
-        std::cout << "deform vertices size: " << positions.size() << std::endl;
+        // std::cout << "deform vertices size: " << positions.size() << std::endl;
         vector<Vertex> vertices;
         assert(positions.size() == normals.size());
         for(int i = 0; i < positions.size(); i++)

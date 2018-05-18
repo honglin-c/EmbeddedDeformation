@@ -48,11 +48,11 @@ void DeformGraph::findKNN()
 		}
 
 		assert(heap.size() >= this->k);
-		cout << "position: ";
-		print(v->getPosition());
-		cout << "normal: ";
-		print(v->getNormal());
-		cout << endl << "expected min: " << min << " max: " << max << endl;
+		// cout << "position: ";
+		// print(v->getPosition());
+		// cout << "normal: ";
+		// print(v->getNormal());
+		// cout << endl << "expected min: " << min << " max: " << max << endl;
 		vector<Node *> vnodes;
 		vector<float> dists, weights;
 		Node * pnode = nullptr;
@@ -64,7 +64,7 @@ void DeformGraph::findKNN()
 			vnodes.push_back(pnode);
 			dists.push_back(glm::length(pnode->getPosition() - pos));
 			curpos = pnode->getPosition();
-			cout << curpos[0] << "," << curpos[1] << "," << curpos[2] <<  " dist:" <<  glm::length(curpos - pos) << endl;
+			// cout << curpos[0] << "," << curpos[1] << "," << curpos[2] <<  " dist:" <<  glm::length(curpos - pos) << endl;
 			heap.pop();
 		}
 
@@ -80,12 +80,12 @@ void DeformGraph::findKNN()
 			weights.push_back(weight);
 			norm_sum += weight;
 		}
-		std::cout << "norm sum:" << norm_sum << std::endl;
+		// std::cout << "norm sum:" << norm_sum << std::endl;
 		// Normalize
 		for(int i = 0; i < weights.size(); i++)
 		{
 			weights[i] /= norm_sum;
-			std::cout << "weight" << i <<":" << weights[i] << std::endl;
+			// std::cout << "weight" << i <<":" << weights[i] << std::endl;
 			assert(weights[i] == weights[i]); // avoid nan
 		}
 
@@ -233,11 +233,11 @@ void DeformGraph::applyTransformation(glm::mat3 &rotation, glm::vec3 &translatio
 		{
 			position += v->weights[i] * v->nodes[i]->transformPosition(v->position_init);
 			normal += v->weights[i] * v->nodes[i]->transformNormal(v->normal_init);
-			std::cout << "weight " << i << ":" << v->weights[i] << std::endl;
-			std::cout << "accumulated position:";
-			print(position);
-			std::cout << "accumulated normal:";
-			print(normal);
+			// std::cout << "weight " << i << ":" << v->weights[i] << std::endl;
+			// std::cout << "accumulated position:";
+			// print(position);
+			// std::cout << "accumulated normal:";
+			// print(normal);
 		}
 		v->setPositionAndNormal(position, normal);
 	}
@@ -255,11 +255,11 @@ void DeformGraph::update()
 		{
 			position += v->weights[i] * v->nodes[i]->transformPosition(v->position_init);
 			normal += v->weights[i] * v->nodes[i]->transformNormal(v->normal_init);
-			std::cout << "weight " << i << ":" << v->weights[i] << std::endl;
-			std::cout << "accumulated position:";
-			print(position);
-			std::cout << "accumulated normal:";
-			print(normal);
+			// std::cout << "weight " << i << ":" << v->weights[i] << std::endl;
+			// std::cout << "accumulated position:";
+			// print(position);
+			// std::cout << "accumulated normal:";
+			// print(normal);
 		}
 		v->setPositionAndNormal(position, normal);
 	}
@@ -296,6 +296,7 @@ void DeformGraph::optimize()
 		SparseMf Jf = this->getJf();
 		debug("1.1");
 		VectorXf fx = this->getfx();
+		std::cout << fx << std::endl;
 		debug("1.2");
 		if(i == 0)
 			delta = descentDirection(Jf, fx, chol, true);
@@ -543,12 +544,16 @@ SparseMf DeformGraph::getJf()
 float DeformGraph::dRegTerm(Vector3f &regTerm, int i)
 {
 	assert(i >= 0 && i < 3);
+	if(regTerm.norm() == 0.0f)
+		return 0.0f;
 	return sqrt10 * regTerm(i) / std::sqrt(regTerm(0) * regTerm(0) + regTerm(1) * regTerm(1) + regTerm(2) * regTerm(2));
 }
 
 float DeformGraph::dConTerm(Vector3f &conTerm, int i)
 {
 	assert(i >= 0 && i < 3);
+	if(conTerm.norm() == 0.0f)
+		return 0.0f;
 	return 10 * conTerm(i) / std::sqrt(conTerm(0) * conTerm(0) + conTerm(1) * conTerm(1) + conTerm(2) * conTerm(2));
 }
 
