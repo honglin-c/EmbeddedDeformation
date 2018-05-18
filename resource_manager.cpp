@@ -181,7 +181,7 @@ Texture3D ResourceManager::loadTexture3DFromFile(const string &file)
     while (fscanf(fp, "%d", &pixel) == 1)
     {
         image[i++] = pixel >> 24;
-        image[i++] = pixel >> 16;3.0
+        image[i++] = pixel >> 16;
         image[i++] = pixel >> 8;
         image[i++] = pixel >> 0;
     }
