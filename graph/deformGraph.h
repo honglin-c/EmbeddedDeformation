@@ -32,7 +32,7 @@ public:
 
 	// Transform the vertices within a aabb
 	void applyTransformation(glm::mat3 &rotation, glm::vec3 &translation, AABB &aabb);
-	// Fixed all the vertices with a aabb
+	// Fixed all the vertices within a aabb
 	void addFixedConstraint(AABB &aabb);
 	void draw();
 	void outputToFile();

@@ -516,7 +516,7 @@ SparseMf DeformGraph::getJf()
 						for(int rot_j = 0; rot_j < 3; rot_j++)
 						{
 							col = n_col_count * x_rt + 3 * rot_i + rot_j;
-							std::cout << row << " " << col << std::endl;
+							// std::cout << row << " " << col << std::endl;
 							Jf.insert(row, col) = dConTerm(conTerm, rot_i) * v->weights[vn_count]
 										 * (v->getPosition()[rot_j] - vn->getPosition()[rot_j]);
 						}
@@ -526,7 +526,7 @@ SparseMf DeformGraph::getJf()
 					for(int ti = 0; ti < 3; ti++)
 					{
 						col = n_col_count * x_rt + 9 + ti;
-						std::cout << row << " " << col << std::endl;
+						// std::cout << row << " " << col << std::endl;
 						Jf.insert(row, col) = dConTerm(conTerm, ti) * v->weights[vn_count];
 					}
 				}
