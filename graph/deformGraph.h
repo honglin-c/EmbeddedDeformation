@@ -1,6 +1,7 @@
 #ifndef _DEFORM_GRAPH_H
 #define _DEFORM_GRAPH_H
 
+#include <vector>
 #include <string> //for debug
 
 #include <GL/glew.h>
@@ -17,12 +18,14 @@
 #include "../mesh.h"
 
 typedef Eigen::SparseMatrix<float> SparseMf;
+typedef Eigen::Triplet<float> Tf;
+
+using std::vector;
 
 using Eigen::MatrixXf;
 using Eigen::VectorXf;
 using Eigen::SimplicialCholesky;
-using Eigen::EigenSolver;
-
+using Eigen::SelfAdjointEigenSolver;
 using Eigen::SparseVector;
 
 class DeformGraph

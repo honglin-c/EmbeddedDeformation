@@ -296,15 +296,15 @@ void DeformGraph::optimize()
 	{
 		debug("1");
 		SparseMf Jf = this->getJf();
-		std::cout << i << "-th Jf: " << std::endl;
-		for(int j = 0; j < Jf.rows(); j++)
-		{
-			for(int k = 0; k <Jf.cols(); k++)
-			{
-				if(std::fabs(Jf.coeffRef(j, k)) > 0.0f)
-					std::cout << "catch Jf(" << j << ", " << k << ") " << Jf.coeffRef(j, k) << std::endl;
-			}
-		}
+		// std::cout << i << "-th Jf: " << std::endl;
+		// for(int j = 0; j < Jf.rows(); j++)
+		// {
+		// 	for(int k = 0; k <Jf.cols(); k++)
+		// 	{
+		// 		if(std::fabs(Jf.coeffRef(j, k)) > 0.0f)
+		// 			std::cout << "catch Jf(" << j << ", " << k << ") " << Jf.coeffRef(j, k) << std::endl;
+		// 	}
+		// }
 
 		debug("1.1");
 		VectorXf fx = this->getfx();
@@ -337,10 +337,7 @@ void DeformGraph::optimize()
 				std::cout << j << "-th huge: " << delta(j) << std::endl;
 		}
 
-		delta.normalize();
-		delta *= 5.0f;
-
-		std::cout << "checkpoint: " << 6 * nodes.size() << " " << fx_order << " "  << x_order << std::endl;
+		std::cout << "checkpoint: " << rot_end << " " << reg_end << " "  << fx_order << std::endl;
 		std::cout << i << "-th delta: " << std::endl;
 		for(int j = 0; j < delta.rows(); j++)
 		{
@@ -419,6 +416,8 @@ void DeformGraph::updateOrder()
 // Compute Jf - double check here
 SparseMf DeformGraph::getJf()
 {
+	vector<Tf> tripletList;
+	tripletList.reserve(0.1 * fx_order * x_order);
 	// Create a sparse matrix whose entry is 0 unless it is set in the below
 	SparseMf Jf(fx_order, x_order);
 	int row, col;
@@ -445,29 +444,35 @@ SparseMf DeformGraph::getJf()
 
 				// c1 * c2
 				if(rotj == 0 || rotj == 1)
-					Jf.insert(row + 0, col) = rotation(roti, 1 - rotj);
+					tripletList.push_back(Tf(row + 0, col, rotation(roti, 1 - rotj)));
+					// Jf.insert(row + 0, col) = rotation(roti, 1 - rotj);
 
 				debug("1.0.1.2");
 
 				// c1 * c3
 				if(rotj == 0 || rotj == 2)
-					Jf.insert(row + 1, col) = rotation(roti, 2 - rotj);
+					tripletList.push_back(Tf(row + 1, col, rotation(roti, 2 - rotj)));
+					// Jf.insert(row + 1, col) = rotation(roti, 2 - rotj);
 
 				// c2 * c3
 				if(rotj == 1 || rotj == 2)
-					Jf.insert(row + 2, col) = rotation(roti, 3 - rotj);
+					tripletList.push_back(Tf(row + 2, col, rotation(roti, 3 - rotj)));
+					// Jf.insert(row + 2, col) = rotation(roti, 3 - rotj);
 
 				// c1 * c1 -1
 				if(rotj == 0)
-					Jf.insert(row + 3, col) = 2.0f * rotation(roti, 0);
+					tripletList.push_back(Tf(row + 3, col, 2.0f * rotation(roti, 0)));
+					// Jf.insert(row + 3, col) = 2.0f * rotation(roti, 0);
 
 				// c2 * c2 -1
 				if(rotj == 1)
-					Jf.insert(row + 4, col) = 2.0f * rotation(roti, 1);
+					tripletList.push_back(Tf(row + 4, col, 2.0f * rotation(roti, 1)));
+					// Jf.insert(row + 4, col) = 2.0f * rotation(roti, 1);
 
 				// c3 * c3 -1
 				if(rotj == 2)
-					Jf.insert(row + 5, col) = 2.0f * rotation(roti, 2);
+					tripletList.push_back(Tf(row + 5, col, 2.0f * rotation(roti, 2)));
+					// Jf.insert(row + 5, col) = 2.0f * rotation(roti, 2);
 			}
 		}
 	}
@@ -488,6 +493,7 @@ SparseMf DeformGraph::getJf()
 		for(auto neighbor:n_row->getNeighbors())
 		{
 			Vector3f reg_k = n_row->getRegTerm(neighbor);
+
 			// iterate from Rni_11 to Rni_33
 			for(int rot_i = 0; rot_i < 3; rot_i ++)
 			{
@@ -495,16 +501,19 @@ SparseMf DeformGraph::getJf()
 				{
 					this_row = row + 3 * neighbor_count + rot_i;
 					this_col = ci * x_rt + rot_i * 3 + rot_j;
-					Jf.insert(this_row, this_col) = (neighbor->getPosition() - n_row->getPosition())[rot_j];
+					tripletList.push_back(Tf(this_row, this_col, (neighbor->getPosition() - n_row->getPosition())[rot_j]));
+					// Jf.insert(this_row, this_col) = (neighbor->getPosition() - n_row->getPosition())[rot_j];
 				}
 			}
 
 			// iterate through ti_1 to ti_3
 			for(int ti = 0; ti < 3; ti++)
 			{
+				// not consider t_k here
 				this_row = row + 3 * neighbor_count + ti;
 				this_col = ci * x_rt + 9 + ti;
-				Jf.insert(this_row, this_col) = 1.0f; // not consider t_k here
+				tripletList.push_back(Tf(this_row, this_col, 1.0f));
+				// Jf.insert(this_row, this_col) = 1.0f;
 			}
 
 			neighbor_count++;
@@ -533,7 +542,8 @@ SparseMf DeformGraph::getJf()
 					{
 						this_row = row + 3 * neighbor_count + ti;
 						this_col = col + ti;
-						Jf.insert(this_row, this_col) = -1.0f;
+						tripletList.push_back(Tf(this_row, this_col, -1.0f));
+						// Jf.insert(this_row, this_col) = -1.0f;
 					}
 				}
 				ci++; // increase column index(ci-th node's R)
@@ -570,9 +580,11 @@ SparseMf DeformGraph::getJf()
 							this_row = row + rot_i;
 							this_col = n_col_count * x_rt + 3 * rot_i + rot_j;
 							// std::cout << row << " " << col << std::endl;
-
-							Jf.insert(this_row, this_col) = v->weights[vn_count]
-										 * (v->getPosition() - vn->getPosition())[rot_j];
+							tripletList.push_back(Tf(this_row,
+													 this_col,
+													 v->weights[vn_count] * (v->getPosition() - vn->getPosition())[rot_j]));
+							// Jf.insert(this_row, this_col) = v->weights[vn_count]
+							// 			 * (v->getPosition() - vn->getPosition())[rot_j];
 						}
 					}
 
@@ -582,7 +594,8 @@ SparseMf DeformGraph::getJf()
 						this_row = row + ti;
 						this_col = n_col_count * x_rt + 9 + ti;
 						// std::cout << row << " " << col << std::endl;
-						Jf.insert(this_row, this_col) = v->weights[vn_count];
+						tripletList.push_back(Tf(this_row, this_col, v->weights[vn_count]));
+						// Jf.insert(this_row, this_col) = v->weights[vn_count];
 					}
 				}
 				n_col_count++;
@@ -592,6 +605,10 @@ SparseMf DeformGraph::getJf()
 		row += 3;
 	}
 	debug("1.0.4");
+
+	Jf.setFromTriplets(tripletList.begin(), tripletList.end());
+
+	debug("1.0.5");
 
 	return Jf;
 }
@@ -675,20 +692,27 @@ VectorXf DeformGraph::descentDirection(const SparseMf &Jf, const VectorXf &fx, S
 	// Compute the sparse Cholesky Decomposition of Jf^T * Jf
   	chol.compute(JfTJf);
 
-  	if(chol.info() == Eigen::ComputationInfo::NumericalIssue){
+  	if(chol.info() == Eigen::ComputationInfo::NumericalIssue)
+  	{
   		std::cout << "ERROR: Cholesky Decompostion Fail! JfTJf is not positive definite" << std::endl;
 
   		// Calculate all the eigenvalues and catch the negative ones
   		MatrixXf temp = MatrixXf(JfTJf);
-  		EigenSolver<MatrixXf> solver(temp, false);
+  		SelfAdjointEigenSolver<MatrixXf> solver(temp);
   		int size = solver.eigenvalues().size();
+  		VectorXf x;
   		for(int k = 0; k < size; k++)
   		{
   			complex<double> result = solver.eigenvalues()(k);
   			if(result.real() < 0.0f)
+  			{
   				std::cout << "catch negative eigenvalue (" << k << ") : " << result << std::endl;
+  				x = solver.eigenvectors().col(k);
+  			}
   		}
-  		std::cout << solver.eigenvalues() << std::endl;
+  		// use the first 0 eigenvector as the descent direction for debug
+  		return x;
+  		// std::cout << solver.eigenvalues() << std::endl;
   	}
 
 	// get the solution to the given right hand side
