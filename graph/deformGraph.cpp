@@ -309,6 +309,15 @@ void DeformGraph::optimize()
 		debug("1.1");
 		VectorXf fx = this->getfx();
 		std::cout << i << "-th fx: " << std::endl;
+
+		VectorXf E_rot = fx.segment(0, rot_end);
+		VectorXf E_reg = fx.segment(rot_end, reg_end - rot_end);
+		VectorXf E_con = fx.segment(rot_end, fx.size() - rot_end);
+
+		std::cout << "E_rot: " << E_rot.colwise().norm() << std::endl;
+		std::cout << "E_reg: " << E_reg.colwise().norm() << std::endl;
+		std::cout << "E_con: " << E_con.colwise().norm() << std::endl;
+
 		// std::cout << fx << std::endl;
 		for(int j = 0; j < fx.rows(); j++)
 		{
@@ -325,7 +334,7 @@ void DeformGraph::optimize()
 		for(int j = 0; j < delta.rows(); j++)
 		{
 			if(delta(j) > 0.001f)
-				std::cout << j << "-th huge: " << delta(j) << std::endl; 
+				std::cout << j << "-th huge: " << delta(j) << std::endl;
 		}
 
 		delta.normalize();
@@ -336,7 +345,7 @@ void DeformGraph::optimize()
 		for(int j = 0; j < delta.rows(); j++)
 		{
 			if(delta(j) > 0.001f)
-				std::cout << j << "-th huge: " << delta(j) << std::endl; 
+				std::cout << j << "-th huge: " << delta(j) << std::endl;
 		}
 
 		debug("2");
@@ -396,8 +405,12 @@ void DeformGraph::updateOrder()
 {
 	x_order = 12 * nodes.size();
 	fx_order = 6 * nodes.size();
+	std::cout << "Erot end pos: " << fx_order << std::endl;
+	rot_end = fx_order;
 	for(auto n:nodes)
 		fx_order += 3 * n->getNeighbors().size();
+	std::cout << "Ereg end pos: " << fx_order << std::endl;
+	reg_end = fx_order;
 	fx_order += 3 * vertices.size();
 	std::cout << "x_order:" << x_order << " fx_order:" << fx_order << std::endl;
 }
@@ -557,7 +570,7 @@ SparseMf DeformGraph::getJf()
 							this_row = row + rot_i;
 							this_col = n_col_count * x_rt + 3 * rot_i + rot_j;
 							// std::cout << row << " " << col << std::endl;
-							
+
 							Jf.insert(this_row, this_col) = v->weights[vn_count]
 										 * (v->getPosition() - vn->getPosition())[rot_j];
 						}
@@ -652,16 +665,20 @@ VectorXf DeformGraph::getfx()
 	return fx;
 }
 
-// Implement symbolic factorization and fill-reducing later - use Eigen first
+// Use cholesky decomposition to calculate the descent direction
 VectorXf DeformGraph::descentDirection(const SparseMf &Jf, const VectorXf &fx, SimplicialCholesky<SparseMf> &chol, bool symbolic)
 {
 	// Solving:
   	SparseMf JfTJf = Jf.transpose() * Jf;
   	if(symbolic)
   		chol.analyzePattern(JfTJf);
+	// Compute the sparse Cholesky Decomposition of Jf^T * Jf
   	chol.compute(JfTJf);
+
   	if(chol.info() == Eigen::ComputationInfo::NumericalIssue){
-  		std::cout << "ERROR: Cholesky Decompostion Fail! JfTJf is not positive definite"<< std::endl;
+  		std::cout << "ERROR: Cholesky Decompostion Fail! JfTJf is not positive definite" << std::endl;
+
+  		// Calculate all the eigenvalues and catch the negative ones
   		MatrixXf temp = MatrixXf(JfTJf);
   		EigenSolver<MatrixXf> solver(temp, false);
   		int size = solver.eigenvalues().size();
@@ -669,13 +686,13 @@ VectorXf DeformGraph::descentDirection(const SparseMf &Jf, const VectorXf &fx, S
   		{
   			complex<double> result = solver.eigenvalues()(k);
   			if(result.real() < 0.0f)
-  				std::cout << "catch negative eigenvalue: " << result << std::endl;
+  				std::cout << "catch negative eigenvalue (" << k << ") : " << result << std::endl;
   		}
   		std::cout << solver.eigenvalues() << std::endl;
   	}
-	// performs a Cholesky factorizatison of A
-  	VectorXf x = chol.solve(Jf.transpose() * fx);
-	// use the factorization to solve for the given right hand side
+
+	// get the solution to the given right hand side
+  	VectorXf x = chol.solve(-1.0f * Jf.transpose() * fx);
   	return x;
 }
 

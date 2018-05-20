@@ -55,6 +55,9 @@ private:
 	const float epsilon = 1e-6;
 	const int x_rt = 12;
 
+	int rot_end;
+	int reg_end;
+
 	int x_order;
 	int fx_order;
 
