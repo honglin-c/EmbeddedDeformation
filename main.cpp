@@ -26,6 +26,8 @@
 #include "graph/node.h"
 #include "graph/boundingObject.h"
 
+string modelName = "tail";
+
 // Function prototypes.
 void optionInit(GLFWwindow *window);
 
@@ -66,7 +68,7 @@ GLfloat lastFrame = 0.0f;
 float epsilon = 0.000001f;
 
 glm::vec3 lightPos(5.0f, 0.0f, 10.0f);
-glm::vec3 catPos(0.0f, 0.0f, 0.0f);
+glm::vec3 modelPos(0.0f, 0.0f, 0.0f);
 
 GLFWwindow *window;
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -145,8 +147,12 @@ int main()
     // Do some initialization for our application (include loading shaders, models, etc.)
     shaderModelInit();
 
+    std::cout << "#1" << std::endl;
+
     // Initialize the deform graph
     deformGraph();
+
+    std::cout << "#2" << std::endl;
 
     doDeformation();
 
@@ -198,15 +204,13 @@ void shaderModelInit()
                                 "color");
 
     // Load models.
-    ResourceManager::LoadModel(_MODEL_PREFIX_"/cat/cat.obj", "cat");
-    ResourceManager::LoadModel(_MODEL_PREFIX_"/rabbit/rabbit.obj", "rabbit");
     ResourceManager::LoadModel(_MODEL_PREFIX_"/sphere/sphere.obj", "sphere");
-    // Load the model to be deformed
-    ResourceManager::LoadModel(_MODEL_PREFIX_"/cat/cat.obj", "deform_cat");
-
+    ResourceManager::LoadModel(_MODEL_PREFIX_"/"+ modelName +"/"+ modelName +".obj", modelName);
+    // Load the model to be deformed    
+    ResourceManager::LoadModel(_MODEL_PREFIX_"/"+ modelName +"/"+ modelName +".obj", "deform_" + modelName);
 
     // Load samples
-    ResourceManager::LoadSample(_MODEL_PREFIX_"/cat/cat.224.sample", "cat");
+    ResourceManager::LoadSample(_MODEL_PREFIX_"/" + modelName + "/" + modelName + ".sample", modelName);
 
 }
 
@@ -297,15 +301,15 @@ void display()
     // Draw the model Cat
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     model = glm::mat4();
-    model = glm::translate(model, catPos);
+    model = glm::translate(model, modelPos);
     phong.SetMatrix4("model", model);
     // Set material properties.
     phong.SetVector3f("material.ambient", glm::vec3(1.0f, 1.0f, 0.25f));
     phong.SetVector3f("material.diffuse", glm::vec3(1.0f, 1.0f, 0.2f));
     phong.SetVector3f("material.specular", glm::vec3(0.9f, 0.8f, 0.1f));
     phong.SetFloat("material.shininess", 0.3f);
-    Model *catModel = ResourceManager::GetModel("cat");
-    catModel->Draw(phong);
+    Model *originalModel = ResourceManager::GetModel(modelName);
+    originalModel->Draw(phong);
 
     Shader color = ResourceManager::GetShader("color");
     color.Use();
@@ -318,7 +322,7 @@ void display()
                       0.0f, 0.0f, 0.0f, 1.0f);
     color.SetMatrix4("scaling", scaling);
 
-    Sample *sample = ResourceManager::GetSample("cat");
+    Sample *sample = ResourceManager::GetSample(modelName);
 
     // Draw sample particles.
     bool drawParticle = true;
@@ -328,20 +332,20 @@ void display()
     {
         if (drawParticle)
         {
-            std::cout << "sample size:" << sample->size() << std::endl;
+            // std::cout << "sample size:" << sample->size() << std::endl;
             try
             {
                 std::vector<glm::vec3>::iterator pos;
                 for (pos = sample->begin(); pos != sample->end(); pos++)
                 {
-                 glm::vec3 position = *pos;
-                 color.SetVector3f("givenColor", glm::vec3(1.0f, 1.0f, 1.0f));
-                 // Draw the particle.
-                 model = glm::mat4();
-                 // Translate to the particles position.
-                 model = glm::translate(model, position);
-                 color.SetMatrix4("model", model);
-                 sphere->Draw(color);
+                    glm::vec3 position = *pos;
+                    color.SetVector3f("givenColor", glm::vec3(1.0f, 1.0f, 1.0f));
+                    // Draw the particle.
+                    model = glm::mat4();
+                    // Translate to the particles position.
+                    model = glm::translate(model, position);
+                    color.SetMatrix4("model", model);
+                    sphere->Draw(color);
                 }
             }
             catch (std::exception e)
@@ -350,11 +354,10 @@ void display()
             }
         }
     }
-
     // Draw the deform model
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // model = glm::mat4();
-    // model = glm::translate(model, catPos);
+    // model = glm::translate(model, modelPos);
     // phong.SetMatrix4("model", model);
     // // Set material properties.
     // phong.SetVector3f("material.ambient", glm::vec3(0.0f, 1.0f, 0.0f));
@@ -367,15 +370,15 @@ void display()
     // Draw the deform model Cat that is directly deformed
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     model = glm::mat4();
-    model = glm::translate(model, (catPos + glm::vec3(1.0f, 0.0f, 0.0f)));
+    model = glm::translate(model, (modelPos + glm::vec3(1.0f, 0.0f, 0.0f)));
     phong.SetMatrix4("model", model);
     // Set material properties.
     phong.SetVector3f("material.ambient", glm::vec3(0.25f, 1.0f, 1.0f));
     phong.SetVector3f("material.diffuse", glm::vec3(1.0f, 1.0f, 0.2f));
     phong.SetVector3f("material.specular", glm::vec3(0.9f, 0.8f, 0.1f));
     phong.SetFloat("material.shininess", 0.3f);
-    Model *deformCatModel = ResourceManager::GetModel("deform_cat");
-    deformCatModel->Draw(phong);
+    Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
+    deformModel->Draw(phong);
 
 }
 
@@ -385,9 +388,10 @@ void simulate()
 
 void deformGraph()
 {
-    Model *catModel = ResourceManager::GetModel("cat");
-    vector<Vertex> vertices = catModel->returnMeshVertices(0);
+    Model *deformModel = ResourceManager::GetModel(modelName);
+    vector<Vertex> vertices = deformModel->returnMeshVertices(0);
     vector<GraphVertex *> gvertices;
+    std::cout << "~" << std::endl;
 
     for(auto v:vertices)
     {
@@ -395,14 +399,14 @@ void deformGraph()
     }
 
     vector<Node *> gnodes;
-    std::vector<glm::vec3> *sample = ResourceManager::GetSample("cat");
+    std::vector<glm::vec3> *sample = ResourceManager::GetSample(modelName);
     for(auto s:(*sample))
     {
         gnodes.push_back(new Node(s));
     }
-
-    dgraph = new DeformGraph(gvertices, gnodes);
-    dgraph->print();
+    std::cout << "~" << std::endl;
+    dgraph = new DeformGraph(modelName, gvertices, gnodes);
+    // dgraph->print();
 }
 
 void doDeformation()
@@ -416,7 +420,7 @@ void doDeformation()
     glm::mat3 rotation(1.0f, 0.0f, 0.0f,
                        0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 1.0f);
-    glm::vec3 translation(1.0f, 1.0f, -1.0f);
+    glm::vec3 translation(0.0f, -0.3f, -0.2f);
 
     std::cout << "rotation inv:" << std::endl;
     glm::mat3 inverse = glm::inverse(rotation);
@@ -426,8 +430,8 @@ void doDeformation()
 
     // transform tail
     AABB aabb;
-    aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
-    // aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232);
+    // aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
+    aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232);
 
     dgraph->applyTransformation(rotation, translation, aabb);
 
@@ -442,11 +446,11 @@ void doDeformation()
     dgraph->outputToFile();
 
     // Try to deform another model directly
-    Model *deformCatModel = ResourceManager::GetModel("deform_cat");
-    deformCatModel->setMeshVertices(0, dgraph->returnVertices());
+    Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
+    deformModel->setMeshVertices(0, dgraph->returnVertices());
 
     // Load deform model
-    ResourceManager::LoadVertices(_MODEL_PREFIX_"/deform/cat.obj", "deform");
+    // ResourceManager::LoadVertices(_MODEL_PREFIX_"/deform/" + modelName +".obj", "deform");
 
 }
 

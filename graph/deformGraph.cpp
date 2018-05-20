@@ -12,8 +12,10 @@ DeformGraph::DeformGraph()
 
 }
 
-DeformGraph::DeformGraph(vector<GraphVertex *> &vertices,
+DeformGraph::DeformGraph(std::string &name,
+						 vector<GraphVertex *> &vertices,
 						 vector<Node *> &nodes):
+						modelName(name),
 						vertices(vertices),
 						nodes(nodes)
 {
@@ -116,14 +118,14 @@ void DeformGraph::print() const
 
 void DeformGraph::outputToFile()
 {
-	ofstream fout("models/deform/cat.obj");
+	ofstream fout("models/deform/" + modelName + ".obj");
 
 	if(!fout.is_open())
 	{
 		cout << "ERROR: Cannot output deform model" << endl;
 		return;
 	}
-	fout << "# " << endl << "# " << endl << "mtllib cat.mtl" << endl;
+	fout << "# " << endl << "# " << endl << "mtllib " + modelName + ".mtl" << endl;
 	glm::vec3 position, normal;
 	for(auto v:vertices)
 	{
@@ -294,16 +296,48 @@ void DeformGraph::optimize()
 	{
 		debug("1");
 		SparseMf Jf = this->getJf();
+		std::cout << i << "-th Jf: " << std::endl;
+		for(int j = 0; j < Jf.rows(); j++)
+		{
+			for(int k = 0; k <Jf.cols(); k++)
+			{
+				if(std::fabs(Jf.coeffRef(j, k)) > 0.0f)
+					std::cout << "catch Jf(" << j << ", " << k << ") " << Jf.coeffRef(j, k) << std::endl;
+			}
+		}
+
 		debug("1.1");
 		VectorXf fx = this->getfx();
 		std::cout << i << "-th fx: " << std::endl;
-		std::cout << fx << std::endl;
+		// std::cout << fx << std::endl;
+		for(int j = 0; j < fx.rows(); j++)
+		{
+			if(std::fabs(fx(j)) > 0.1f)
+				std::cout << j << "-th huge: " << fx(j) << std::endl;
+		}
 		debug("1.2");
 		if(i == 0)
 			delta = descentDirection(Jf, fx, chol, true);
 		else
 			delta = descentDirection(Jf, fx, chol, false);
+
+		std::cout << i << "-th delta: " << std::endl;
+		for(int j = 0; j < delta.rows(); j++)
+		{
+			if(delta(j) > 0.001f)
+				std::cout << j << "-th huge: " << delta(j) << std::endl; 
+		}
+
 		delta.normalize();
+		delta *= 5.0f;
+
+		std::cout << "checkpoint: " << 6 * nodes.size() << " " << fx_order << " "  << x_order << std::endl;
+		std::cout << i << "-th delta: " << std::endl;
+		for(int j = 0; j < delta.rows(); j++)
+		{
+			if(delta(j) > 0.001f)
+				std::cout << j << "-th huge: " << delta(j) << std::endl; 
+		}
 
 		debug("2");
 
@@ -345,12 +379,12 @@ void DeformGraph::updateNodesRt(VectorXf delta)
 	{
 		rot = delta.segment(n_i * x_rt, 9);
 		t = delta.segment(n_i * x_rt + 9, 3);
-		std::cout << n_i << std::endl;
+		// std::cout << n_i << std::endl;
 		delta_rotation = glm::mat3(rot[0], rot[1], rot[2],
 								   rot[3], rot[4], rot[5],
 								   rot[6], rot[7], rot[8]);
 		delta_translation = glm::vec3(t[0], t[1], t[2]);
-		std::cout << n_i << std::endl;
+		// std::cout << n_i << std::endl;
 		n->addDeltaRotation(delta_rotation);
 		n->addDeltaTranslation(delta_translation);
 		n_i++;
@@ -365,6 +399,7 @@ void DeformGraph::updateOrder()
 	for(auto n:nodes)
 		fx_order += 3 * n->getNeighbors().size();
 	fx_order += 3 * vertices.size();
+	std::cout << "x_order:" << x_order << " fx_order:" << fx_order << std::endl;
 }
 
 
@@ -624,7 +659,20 @@ VectorXf DeformGraph::descentDirection(const SparseMf &Jf, const VectorXf &fx, S
   	SparseMf JfTJf = Jf.transpose() * Jf;
   	if(symbolic)
   		chol.analyzePattern(JfTJf);
-  	chol.factorize(JfTJf);
+  	chol.compute(JfTJf);
+  	if(chol.info() == Eigen::ComputationInfo::NumericalIssue){
+  		std::cout << "ERROR: Cholesky Decompostion Fail! JfTJf is not positive definite"<< std::endl;
+  		MatrixXf temp = MatrixXf(JfTJf);
+  		EigenSolver<MatrixXf> solver(temp, false);
+  		int size = solver.eigenvalues().size();
+  		for(int k = 0; k < size; k++)
+  		{
+  			complex<double> result = solver.eigenvalues()(k);
+  			if(result.real() < 0.0f)
+  				std::cout << "catch negative eigenvalue: " << result << std::endl;
+  		}
+  		std::cout << solver.eigenvalues() << std::endl;
+  	}
 	// performs a Cholesky factorizatison of A
   	VectorXf x = chol.solve(Jf.transpose() * fx);
 	// use the factorization to solve for the given right hand side

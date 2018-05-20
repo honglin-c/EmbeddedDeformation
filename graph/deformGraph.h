@@ -9,6 +9,7 @@
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <Eigen/SparseCholesky>
+#include <Eigen/Eigenvalues>
 
 #include "node.h"
 #include "graphVertex.h"
@@ -20,6 +21,7 @@ typedef Eigen::SparseMatrix<float> SparseMf;
 using Eigen::MatrixXf;
 using Eigen::VectorXf;
 using Eigen::SimplicialCholesky;
+using Eigen::EigenSolver;
 
 using Eigen::SparseVector;
 
@@ -27,7 +29,7 @@ class DeformGraph
 {
 public:
 	DeformGraph();
-	DeformGraph(std::vector<GraphVertex *> &vertices, std::vector<Node *> &nodes);
+	DeformGraph(std::string &name, std::vector<GraphVertex *> &vertices, std::vector<Node *> &nodes);
 	~DeformGraph();
 
 	// Transform the vertices within a aabb
@@ -46,6 +48,7 @@ public:
 	vector<Vertex> returnVertices();
 
 private:
+	const std::string modelName;
 	const int k = 4;
 	const int max_iter = 6;
 	const float sqrt10 = 3.16227766;

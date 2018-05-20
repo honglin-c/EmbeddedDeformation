@@ -228,7 +228,7 @@ void ResourceManager::LoadSample(const string &sampleFile, const string &name)
         for(int i = 0; i < n; i++)
         {
             fin >> x >> y >> z;
-            // std::cout << x << " " << y << " " << z << std::endl;
+            std::cout << x << " " << y << " " << z << std::endl;
             sample->push_back(glm::vec3(x, y, z));
         }
         Samples[name] = sample;
@@ -243,15 +243,10 @@ void ResourceManager::LoadSample(const string &sampleFile, const string &name)
 Sample * ResourceManager::GetSample(const string &name)
 {
     Sample * sample = NULL;
-    try
-    {
-        if(Samples.count(name))
-            sample = Samples[name];
-    }
-    catch (std::exception e)
-    {
+    if(Samples.count(name))
+        sample = Samples[name];
+    else
         std::cout << "ERROR::GetSample Failed to get a sample" << std::endl;
-    }
     return sample;
 }
 

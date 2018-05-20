@@ -69,19 +69,19 @@ glm::vec3 Node::transformPosition(glm::vec3 vpos)
 {
 	if(transformed)
 	{
-		std::cout << "transform position:" << std::endl;
-		print(rotation[0]);
-		print(rotation[1]);
-		print(rotation[2]);
-		print(vpos);
-		print(position);
-		print(translation);
-		print(rotation * (vpos - position) + position + translation);
+		// std::cout << "transform position:" << std::endl;
+		// print(rotation[0]);
+		// print(rotation[1]);
+		// print(rotation[2]);
+		// print(vpos);
+		// print(position);
+		// print(translation);
+		// print(rotation * (vpos - position) + position + translation);
 		return (rotation * (vpos - position) + position + translation);
 	}
 	else{
-		std::cout << "non-transform position:" << std::endl;
-		print(vpos);
+		// std::cout << "non-transform position:" << std::endl;
+		// print(vpos);
 		return vpos;
 	}
 }
@@ -90,18 +90,18 @@ glm::vec3 Node::transformNormal(glm::vec3 normal)
 {
 	if(transformed)
 	{
-		std::cout << "transform normal:" << std::endl;
-		print(normal);
-		print(glm::inverse(rotation)[0]);
-		print(glm::inverse(rotation)[1]);
-		print(glm::inverse(rotation)[2]);
-		print(glm::inverse(rotation) * normal);
+		// std::cout << "transform normal:" << std::endl;
+		// print(normal);
+		// print(glm::inverse(rotation)[0]);
+		// print(glm::inverse(rotation)[1]);
+		// print(glm::inverse(rotation)[2]);
+		// print(glm::inverse(rotation) * normal);
 		return glm::inverse(rotation) * normal;
 	}
 	else
 	{
-		std::cout << "non-transform normal:" << std::endl;
-		print(normal);
+		// std::cout << "non-transform normal:" << std::endl;
+		// print(normal);
 		return normal;
 	}
 }
