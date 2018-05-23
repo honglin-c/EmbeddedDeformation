@@ -3,107 +3,95 @@
 
 Node::Node():transformed(false)
 {
-	rotation = glm::mat3(1.0f, 0.0f, 0.0f,
-						 0.0f, 1.0f, 0.0f,
-						 0.0f, 0.0f, 1.0f);
-	translation = glm::vec3(0.0f, 0.0f, 0.0f);
+	rotation = Matrix3d::Identity();
+	translation = Vector3d(0.0f, 0.0f, 0.0f);
 }
 
-Node::Node(glm::vec3 _position):position(_position), transformed(false)
+Node::Node(glm::vec3 _position):position(Vector3d(_position[0], _position[1], _position[2])),
+								transformed(false)
 {
-	rotation = glm::mat3(1.0f, 0.0f, 0.0f,
-						 0.0f, 1.0f, 0.0f,
-						 0.0f, 0.0f, 1.0f);
-	translation = glm::vec3(0.0f, 0.0f, 0.0f);
+	rotation = Matrix3d::Identity();
+	translation = Vector3d(0.0f, 0.0f, 0.0f);
 }
 
 Node::~Node()
 {}
 
-void Node::setPosition(glm::vec3 _position)
-{
-	position = _position;
-}
+// void Node::setPosition(Vector3d _position)
+// {
+// 	position = _position;
+// }
 
-glm::vec3 Node::getPosition() const
+Vector3d Node::getPosition() const
 {
 	return position;
 }
 
-glm::vec3 Node::getTranslation() const
+Vector3d Node::getTranslation() const
 {
 	return translation;
 }
 
 
-void Node::addDeltaRotation(glm::mat3 delta)
+void Node::addDeltaRotation(Matrix3d delta)
 {
+	Matrix3d before = this->matRotation();
 	rotation += delta;
+	Matrix3d after = this->matRotation();
+	Matrix3d ata = after.transpose() * after;
+	if(ata != Eigen::MatrixXd::Identity(3, 3))
+	{
+		std::cout << "before: " << std::endl;
+		std::cout << before << std::endl;
+		std::cout << "after: " << std::endl;
+		std::cout << after << std::endl;
+		std::cout << "A^T * A: " << std::endl;
+		std::cout << ata << std::endl;
+		// for(int i = 0; i < ata.rows(); i++)
+		// {
+		// 	for(int j = 0; j < ata.cols(); j++)
+		// 	{
+		// 		if(i != j && ata(i, j) > 1e-4)
+		// 			assert(0);
+		// 	}
+		// }
+	}
 }
 
-void Node::addDeltaTranslation(glm::vec3 delta)
+void Node::addDeltaTranslation(Vector3d delta)
 {
 	translation += delta;
 }
 
 
-glm::vec3 Node::applyMapping(glm::vec3 p)
+Vector3d Node::applyMapping(Vector3d p)
 {
 	return rotation * (p - position) + position + translation;
 }
 
-void Node::setTransformation(glm::mat3 &_rotation, glm::vec3 &_translation)
+void Node::setTransformation(Matrix3d &_rotation, Vector3d &_translation)
 {
 	rotation = _rotation;
 	translation = _translation;
 	transformed = true;
+	// Matrix3d rot = this->matRotation();
+	// assert(rot.transpose() * rot == MatrixXd::Identity(3, 3));
 }
 
 
-void print(const glm::vec3 &v)
+void print(const Vector3d &v)
 {
-    std::cout << v[0] << ", " << v[1] << ", " << v[2] << std::endl;
+    std::cout << v << std::endl;
 }
 
-glm::vec3 Node::transformPosition(glm::vec3 vpos)
+Vector3d Node::transformPosition(Vector3d vpos)
 {
-	if(transformed)
-	{
-		// std::cout << "transform position:" << std::endl;
-		// print(rotation[0]);
-		// print(rotation[1]);
-		// print(rotation[2]);
-		// print(vpos);
-		// print(position);
-		// print(translation);
-		// print(rotation * (vpos - position) + position + translation);
-		return (rotation * (vpos - position) + position + translation);
-	}
-	else{
-		// std::cout << "non-transform position:" << std::endl;
-		// print(vpos);
-		return vpos;
-	}
+	return (rotation * (vpos - position) + position + translation);
 }
 
-glm::vec3 Node::transformNormal(glm::vec3 normal)
+Vector3d Node::transformNormal(Vector3d normal)
 {
-	if(transformed)
-	{
-		// std::cout << "transform normal:" << std::endl;
-		// print(normal);
-		// print(glm::inverse(rotation)[0]);
-		// print(glm::inverse(rotation)[1]);
-		// print(glm::inverse(rotation)[2]);
-		// print(glm::inverse(rotation) * normal);
-		return glm::inverse(rotation) * normal;
-	}
-	else
-	{
-		// std::cout << "non-transform normal:" << std::endl;
-		// print(normal);
-		return normal;
-	}
+	return rotation.inverse() * normal;
 }
 
 void Node::addNeighbor(Node * n)
@@ -117,60 +105,60 @@ std::set<Node *> Node::getNeighbors()
 }
 
 
-float Node::getRotValue()
+double Node::getRotValue()
 {
-	glm::vec3 c1 = glm::column(rotation, 0);
-	glm::vec3 c2 = glm::column(rotation, 1);
-	glm::vec3 c3 = glm::column(rotation, 2);
-	float c12 = glm::dot(c1, c2);
-	float c13 = glm::dot(c1, c3);
-	float c23 = glm::dot(c2, c3);
-	float c11 = glm::dot(c1, c1);
-	float c22 = glm::dot(c2, c2);
-	float c33 = glm::dot(c3, c3);
+	Vector3d c1 = rotation.col(0);
+	Vector3d c2 = rotation.col(1);
+	Vector3d c3 = rotation.col(2);
+	double c12 = c1.dot(c2);
+	double c13 = c1.dot(c3);
+	double c23 = c2.dot(c3);
+	double c11 = c1.dot(c1);
+	double c22 = c2.dot(c2);
+	double c33 = c3.dot(c3);
 	return (c12 * c12 + c13 * c13 + c23 * c23
 		 + (c11 - 1.0f) * (c11 - 1.0f) + (c22 - 1.0f) * (c22 - 1.0f) + (c33 - 1.0f) * (c33 - 1.0f));
 }
 
-float Node::getRegValue()
+double Node::getRegValue()
 {
-	float reg = 0.0f;
+	double reg = 0.0f;
 	for(auto n:neighbors)
 	{
-		glm::vec3 npos = n->getPosition();
-		glm::vec3 nt = n->getTranslation();
-		float norm2 = glm::length(rotation * (npos - position) + position + translation - (npos + nt));
+		Vector3d npos = n->getPosition();
+		Vector3d nt = n->getTranslation();
+		double norm2 = (rotation * (npos - position) + position + translation - (npos + nt)).norm();
 		reg += norm2 * norm2;
 	}
 	return reg;
 }
 
 // Get [(c1*c2) (c1*c3) (c2*c3) (c1*c1-1) (c2*c2-1) (c3*c3-1)]
-VectorXf Node::getRotTerm()
+VectorXd Node::getRotTerm()
 {
-	VectorXf rot(6);
-	glm::vec3 c1 = glm::column(rotation, 0);
-	glm::vec3 c2 = glm::column(rotation, 1);
-	glm::vec3 c3 = glm::column(rotation, 2);
-	rot[0] = glm::dot(c1, c2);
-	rot[1] = glm::dot(c1, c3);
-	rot[2] = glm::dot(c2, c3);
-	rot[3] = glm::dot(c1, c1) - 1.0f;
-	rot[4] = glm::dot(c2, c2) - 1.0f;
-	rot[5] = glm::dot(c3, c3) - 1.0f;
+	VectorXd rot(6);
+	Vector3d c1 = rotation.col(0);
+	Vector3d c2 = rotation.col(1);
+	Vector3d c3 = rotation.col(2);
+	rot(0) = c1.dot(c2);
+	rot(1) = c1.dot(c3);
+	rot(2) = c2.dot(c3);
+	rot(3) = c1.dot(c1) - 1.0f;
+	rot(4) = c2.dot(c2) - 1.0f;
+	rot(5) = c3.dot(c3) - 1.0f;
 	return rot;
 }
 
 // Get all neighbor's [Rj * (gk - gj) + gj + tj - (gk + tk)]
-MatrixXf Node::getRegTerm()
+MatrixXd Node::getRegTerm()
 {
-	MatrixXf reg(neighbors.size(), 3);
+	MatrixXd reg(neighbors.size(), 3);
 	int count = 0;
 	for(auto n:neighbors)
 	{
-		glm::vec3 npos = n->getPosition();
-		glm::vec3 nt = n->getTranslation();
-		glm::vec3 regterm = rotation * (npos - position) + position + translation - (npos + nt);
+		Vector3d npos = n->getPosition();
+		Vector3d nt = n->getTranslation();
+		Vector3d regterm = rotation * (npos - position) + position + translation - (npos + nt);
 		reg(count, 0) = regterm[0];
 		reg(count, 1) = regterm[1];
 		reg(count, 2) = regterm[2];
@@ -179,24 +167,19 @@ MatrixXf Node::getRegTerm()
 	return reg;
 }
 
-Matrix3f Node::matRotation() const
+Matrix3d Node::matRotation() const
 {
-	Matrix3f rot;
-	for(int i = 0; i < 3; i++)
-		for(int j = 0; j < 3; j++)
-			rot(i, j) = rotation[i][j];
-	return rot;
+	return rotation;
 }
 
 // Get a certain neighbor's [Rj * (gk - gj) + gj + tj - (gk + tk)]
-Vector3f Node::getRegTerm(Node * neighbor)
+Vector3d Node::getRegTerm(Node * neighbor)
 {
-	Vector3f reg;
-	glm::vec3 npos = neighbor->getPosition();
-	glm::vec3 nt = neighbor->getTranslation();
-	glm::vec3 regterm = rotation * (npos - position) + position + translation - (npos + nt);
-	reg =  Vector3f(regterm[0], regterm[1], regterm[2]);
-	return reg;
+	Vector3d reg;
+	Vector3d npos = neighbor->getPosition();
+	Vector3d nt = neighbor->getTranslation();
+	Vector3d regterm = rotation * (npos - position) + position + translation - (npos + nt);
+	return regterm;
 }
 
 

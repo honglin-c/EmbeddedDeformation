@@ -5,9 +5,9 @@
 #include <vector>
 #include <Eigen/Dense>
 
-using Eigen::Vector3f;
-using Eigen::VectorXf;
-using Eigen::Matrix3f;
+using Eigen::Vector3d;
+using Eigen::VectorXd;
+using Eigen::Matrix3d;
 
 class Node;
 struct Vertex;
@@ -15,39 +15,40 @@ struct Vertex;
 class GraphVertex {
 public:
 	GraphVertex();
-	GraphVertex(glm::vec3 _position);
+	GraphVertex(Vector3d _position);
 	GraphVertex(struct Vertex _vertex);
 	~GraphVertex();
-	void setPositionAndNormal(glm::vec3 _position, glm::vec3 _normal);
-	glm::vec3 getPosition() const;
-	glm::vec3 getNormal() const;
-	void setNodes(std::vector<Node *> _nodes, std::vector<float> _weights);
+	void setPositionAndNormal(Vector3d _position, Vector3d _normal);
+	Vector3d getPosition() const;
+	Vector3d getNormal() const;
+	void setNodes(std::vector<Node *> _nodes, std::vector<double> _weights);
 	void updatePosition();
 	std::vector<Node *> getNodes();
-	std::vector<float> getWeights();
+	std::vector<double> getWeights();
 	void updateNeighbor();
 	void setFixed(bool is_fixed);
+	void setHandled(bool is_Handled);
 
-	void userSetPosition(glm::vec3 _user_position);
+	void userSetPosition(Vector3d _user_position);
 
 	// Constraint term
-	float getConValue();
+	double getConValue();
 
 	// Get vertex's [ture position - user-specific position]
-	Vector3f getConTerm();
+	Vector3d getConTerm();
 
 
 
 //private:
-	glm::vec3 position_init; // initial position and vertex
-	glm::vec3 normal_init;
-	glm::vec3 position;
-	glm::vec3 normal;
+	Vector3d position_init; // initial position and vertex
+	Vector3d normal_init;
+	Vector3d position;
+	Vector3d normal;
 	std::vector<Node *> nodes;
-	std::vector<float> weights;
+	std::vector<double> weights;
 	bool isFixed;
 
-	glm::vec3 user_position;
+	Vector3d user_position;
 	bool isHandled; // if it is a constrainted vertex handled by the user
 };
 

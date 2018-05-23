@@ -4,22 +4,24 @@
 #include <vector>
 #include <queue>
 
-#include <glm/vec3.hpp>
+#include <Eigen/Dense>
 #include "node.h"
+
+using Eigen::Vector3d;
 
 class distCompare
 {
 public:
-	distCompare(glm::vec3 _position = glm::vec3(0.0f, 0.0f, 0.0f))
+	distCompare(Vector3d _position = Vector3d(0.0f, 0.0f, 0.0f))
 	{
 		position = _position;
 	}
 	bool operator() (const Node * lhs, const Node * rhs)
 	{
-		return (glm::length(lhs->getPosition() - position) > glm::length(rhs->getPosition() - position));
+		return ((lhs->getPosition() - position).norm() > (rhs->getPosition() - position).norm());
 	}
 private:
-	glm::vec3 position;
+	Vector3d position;
 };
 
 #endif

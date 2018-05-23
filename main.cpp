@@ -26,7 +26,7 @@
 #include "graph/node.h"
 #include "graph/boundingObject.h"
 
-string modelName = "tail";
+string modelName = "cat";
 
 // Function prototypes.
 void optionInit(GLFWwindow *window);
@@ -69,6 +69,7 @@ float epsilon = 0.000001f;
 
 glm::vec3 lightPos(5.0f, 0.0f, 10.0f);
 glm::vec3 modelPos(0.0f, 0.0f, 0.0f);
+glm::vec3 deformPos(1.0f, 0.0f, 0.0f);
 
 GLFWwindow *window;
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -206,7 +207,7 @@ void shaderModelInit()
     // Load models.
     ResourceManager::LoadModel(_MODEL_PREFIX_"/sphere/sphere.obj", "sphere");
     ResourceManager::LoadModel(_MODEL_PREFIX_"/"+ modelName +"/"+ modelName +".obj", modelName);
-    // Load the model to be deformed    
+    // Load the model to be deformed
     ResourceManager::LoadModel(_MODEL_PREFIX_"/"+ modelName +"/"+ modelName +".obj", "deform_" + modelName);
 
     // Load samples
@@ -324,7 +325,7 @@ void display()
 
     Sample *sample = ResourceManager::GetSample(modelName);
 
-    // Draw sample particles.
+    // Draw original sample nodes.
     bool drawParticle = true;
     if (sample == NULL)
         std::cout << "cannot find the sample" << std::endl;
@@ -354,6 +355,32 @@ void display()
             }
         }
     }
+
+    // Draw the deformed sample nodes
+    std::vector<glm::vec3> deform_sample = dgraph->returnNodes();
+    if (drawParticle)
+    {
+        try
+        {
+            for (auto pos:deform_sample)
+            {
+                glm::vec3 position = pos + deformPos;
+                color.SetVector3f("givenColor", glm::vec3(1.0f, 0.0f, 0.0f));
+                // Draw the particle.
+                model = glm::mat4();
+                // Translate to the particles position.
+                model = glm::translate(model, position);
+                color.SetMatrix4("model", model);
+                sphere->Draw(color);
+            }
+        }
+        catch (std::exception e)
+        {
+         std::cout << "ERROR::DrawSample Failed to draw deformed sample" << std::endl;
+        }
+    }
+
+
     // Draw the deform model
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // model = glm::mat4();
@@ -370,7 +397,7 @@ void display()
     // Draw the deform model Cat that is directly deformed
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     model = glm::mat4();
-    model = glm::translate(model, (modelPos + glm::vec3(1.0f, 0.0f, 0.0f)));
+    model = glm::translate(model, deformPos);
     phong.SetMatrix4("model", model);
     // Set material properties.
     phong.SetVector3f("material.ambient", glm::vec3(0.25f, 1.0f, 1.0f));
@@ -411,32 +438,91 @@ void deformGraph()
 
 void doDeformation()
 {
-    float sin45, cos45, sin90, cos90;
-    sin90 = 1.0f; cos90 = 0.0f;
-    sin45 = cos45 = std::sqrt(2.0f) / 2.0f;
+    double sin45, cos45, sin90, cos90;
+    sin90 = 1.0; cos90 = 0.0;
+    sin45 = cos45 = std::sqrt(2.0) / 2.0;
     // glm::mat3 rotation(cos45,  0.0f,  sin45,
     //                    0.0f,   1.0f,  0.0f,
     //                    -sin45, 0.0f,  cos45);
-    glm::mat3 rotation(1.0f, 0.0f, 0.0f,
-                       0.0f, 1.0f, 0.0f,
-                       0.0f, 0.0f, 1.0f);
-    glm::vec3 translation(0.0f, -0.3f, -0.2f);
+    Matrix3d rotation;
+    // rotation << 1.0, 0.0, 0.0,
+    //             0.0, 1.0, 0.0,
+    //             0.0, 0.0, 1.0;
+    rotation << cos45, 0.0f, sin45,
+                0.0f,  1.0f, 0.0f,
+                -sin45,0.0f, cos45;
+    // rotation << cos90, 0.0f, sin90,
+    //             0.0f,  1.0f, 0.0f,
+    //             -sin90,0.0f, cos90;
+    // rotation << 1.0f, 0.0f, 0.0f,
+    //             0.0f, 1.0f, 0.0f,
+    //             0.0f, 0.0f, 1.0f;
+
+    std::cout << "rotation: " << std::endl;
+    std::cout << rotation << std::endl;
+
+    Vector3d translation(0.0, 0.0, 0.0);
 
     std::cout << "rotation inv:" << std::endl;
-    glm::mat3 inverse = glm::inverse(rotation);
-    print(inverse[0]);
-    print(inverse[1]);
-    print(inverse[2]);
+    Matrix3d inverse = rotation.inverse();
+    std::cout << inverse << std::endl;
+    // print(inverse[0]);
+    // print(inverse[1]);
+    // print(inverse[2]);
 
     // transform tail
     AABB aabb;
-    // aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
-    aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232);
 
+    // pin the former part of the tail
+    aabb.setAABB(-0.129416, 0.092578, 0.410533, 0.592776, -0.055549, 0.103149);
+    dgraph->addFixedConstraint(aabb);
+
+    // pin the body
+    aabb.setAABB(-0.144363, 0.144363, 0.202625, 0.602783, -0.125669, 0.758065);
+    dgraph->addFixedConstraint(aabb);
+
+    // pin the rear legs
+    // aabb.setAABB(-0.16731, 0.16731, -0.002068, 0.429177, -0.064655, 0.270305);
+    // dgraph->addFixedConstraint(aabb);
+
+    // pin the right leg
+    // aabb.setAABB(-0.16731, 0.126305, -0.001683, 0.304127, 0.10341, 0.691942);
+    // dgraph->addFixedConstraint(aabb);
+
+    // pin the head
+    aabb.setAABB(-0.1678, 0.171623, 0.022794, 0.700577, 0.689812, 0.973195);
+    dgraph->addFixedConstraint(aabb);
+    // rotation << cos90, 0.0f, sin90,
+    //             0.0f,  1.0f, 0.0f,
+    //             -sin90,0.0f, cos90;
+    // translation = Vector3d(0.0, 0.0, 0.0);
+    // dgraph->applyTransformation(rotation, translation, aabb);
+
+    // transform the end of the tail
+    // aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
+    // aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232); // longer end
+    aabb.setAABB(-0.016785, 0.016785, 0.900588, 0.919792, -0.358661, -0.336833);
+    translation = Vector3d(0.3, -0.7, 0.0);
     dgraph->applyTransformation(rotation, translation, aabb);
 
-    // tranform head
-    // aabb.setAABB(-0.1678, 0.171623, 0.022794, 0.700577, 0.689812, 0.973195);
+    // transform the front paw
+    aabb.setAABB(-0.10704, 0.10704, -0.001683, 0.052816, 0.587649, 0.691307);
+    translation = Vector3d(0.0, 0.1, 0.25);
+    dgraph->applyTransformation(rotation, translation, aabb);
+
+    // transform the rear paw
+    aabb.setAABB(-0.16731, 0.16731, -0.002068, 0.093362, 0.015152, 0.165848);
+    translation = Vector3d(0.0, 0.05, -0.25);
+    dgraph->applyTransformation(rotation, translation, aabb);
+
+    // transform the left leg
+    // aabb.setAABB(-0.1678, 0.171623, -0.002068, 0.919792, -0.358661, 0.973195);
+    // translation = Vector3d(0.0, 0.3, 0.3);
+    // dgraph->applyTransformation(rotation, translation, aabb);
+
+    // aabb.setAABB(-0.16731, 0.126305, -0.001683, 0.304127, 0.10341, 0.691942);
+    // dgraph->applyTransformation(rotation, translation, aabb);
+
     // translation = glm::vec3(0.0f, 0.0f, 0.0f);
 
     // dgraph->applyTransformation(rotation, translation, aabb);

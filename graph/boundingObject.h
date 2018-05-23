@@ -1,21 +1,20 @@
 #ifndef _BOUNDING_OBJECT_H_
 #define _BOUNDING_OBJECT_H_
 
-#include <GL/glew.h>
-#include <glm/vec3.hpp>
-
+#include <Eigen/Dense>
+using Eigen::Vector3d;
 
 struct AABoundingBox
 {
 
-    GLfloat posX;
-    GLfloat negX;
+    double posX;
+    double negX;
 
-    GLfloat posY;
-    GLfloat negY;
+    double posY;
+    double negY;
 
-    GLfloat posZ;
-    GLfloat negZ;
+    double posZ;
+    double negZ;
 };
 
 //Axis Aligned Bounding Box
@@ -24,24 +23,22 @@ class AABB
 public:
     AABB(){}
     ~AABB(){}
-    void setAABB(GLfloat MinX, GLfloat MaxX, GLfloat MinY, GLfloat MaxY, GLfloat MinZ, GLfloat MaxZ);
-    void splitAABB(int axis, GLfloat splitPlane, AABB &left, AABB &right);
-    GLfloat getSplitPlane(int axis);
-    bool isInside(glm::vec3 position) const;
+    void setAABB(double MinX, double MaxX, double MinY, double MaxY, double MinZ, double MaxZ);
+    bool isInside(Vector3d position) const;
 
-    GLfloat posX;
-    GLfloat negX;
-    GLfloat xDist;
+    double posX;
+    double negX;
+    double xDist;
 
-    GLfloat posY;
-    GLfloat negY;
-    GLfloat yDist;
+    double posY;
+    double negY;
+    double yDist;
 
-    GLfloat posZ;
-    GLfloat negZ;
-    GLfloat zDist;
+    double posZ;
+    double negZ;
+    double zDist;
 
-    glm::vec3 centerPos;
+    Vector3d centerPos;
 };
 
 #endif

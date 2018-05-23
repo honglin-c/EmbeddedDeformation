@@ -17,14 +17,14 @@
 #include "boundingObject.h"
 #include "../mesh.h"
 
-typedef Eigen::SparseMatrix<float> SparseMf;
-typedef Eigen::Triplet<float> Tf;
+typedef Eigen::SparseMatrix<double> SparseMd;
+typedef Eigen::Triplet<double> Tf;
 
 using std::vector;
 
-using Eigen::MatrixXf;
-using Eigen::VectorXf;
-using Eigen::SimplicialCholesky;
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
+using Eigen::SimplicialLDLT;
 using Eigen::SelfAdjointEigenSolver;
 using Eigen::SparseVector;
 
@@ -36,12 +36,12 @@ public:
 	~DeformGraph();
 
 	// Transform the vertices within a aabb
-	void applyTransformation(glm::mat3 &rotation, glm::vec3 &translation, AABB &aabb);
+	void applyTransformation(Matrix3d &rotation, Vector3d &translation, AABB &aabb);
 	// Fixed all the vertices within a aabb
 	void addFixedConstraint(AABB &aabb);
 	void draw();
 	void outputToFile();
-	void print(const glm::vec3 &v);
+	void print(const Vector3d &v);
 
 	void print() const;
 
@@ -50,13 +50,19 @@ public:
 
 	vector<Vertex> returnVertices();
 
+	vector<glm::vec3> returnNodes();
+
 private:
 	const std::string modelName;
 	const int k = 4;
-	const int max_iter = 6;
-	const float sqrt10 = 3.16227766;
-	const float epsilon = 1e-6;
+	const int max_iter = 20;
+	const double sqrt10 = 3.16227766;
+	const double epsilon = 1e-6;
 	const int x_rt = 12;
+	const double w_rot = 1.0;
+	const double w_reg = 10.0;
+	const double w_con = 100.0;
+
 
 	int rot_end;
 	int reg_end;
@@ -80,18 +86,18 @@ private:
 //============================================================================
 // Optimization
 
-	SparseMf getJf();
-	VectorXf getfx();
-	VectorXf descentDirection(const SparseMf &Jf, const VectorXf &fx, SimplicialCholesky<SparseMf> &chol, bool symbolic);
+	SparseMd getJf();
+	VectorXd getfx();
+	VectorXd descentDirection(const SparseMd &Jf, const VectorXd &fx, SimplicialLDLT<SparseMd> &chol, bool symbolic);
 	// Golden Section Search - not currently working
-	float exactLineSearch();
+	double exactLineSearch();
 
 	// // Deprecated: Get term[i] / norm2(term)
-	// float dRegTerm(Vector3f &regTerm, int i);
-	// float dConTerm(Vector3f &conTerm, int i);
+	// double dRegTerm(Vector3d &regTerm, int i);
+	// double dConTerm(Vector3d &conTerm, int i);
 
 	// Perform x_k+1 = x_k + delta
-	void updateNodesRt(VectorXf delta);
+	void updateNodesRt(VectorXd delta);
 
 
 //============================================================================

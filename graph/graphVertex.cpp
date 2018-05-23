@@ -5,41 +5,43 @@
 GraphVertex::GraphVertex(): isFixed(false), isHandled(false)
 {}
 
-GraphVertex::GraphVertex(glm::vec3 _position):position(_position), 
+GraphVertex::GraphVertex(Vector3d _position):position(_position),
 											  position_init(_position),
-											  isFixed(false), 
+											  isFixed(false),
 											  isHandled(false)
-{}
+{
+}
 
-GraphVertex::GraphVertex(struct Vertex _vertex):position(_vertex.Position),
-												normal(_vertex.Normal), 
-												position_init(_vertex.Position),
-												normal_init(_vertex.Normal), 
-												isFixed(false), 
+GraphVertex::GraphVertex(struct Vertex _vertex):isFixed(false),
 												isHandled(false)
-{}
+{
+	position = Vector3d(_vertex.Position[0], _vertex.Position[1], _vertex.Position[2]);
+	normal = Vector3d(_vertex.Normal[0], _vertex.Normal[1], _vertex.Normal[2]);
+	position_init = position;
+	normal_init = normal;
+}
 
 GraphVertex::~GraphVertex()
 {}
 
-void GraphVertex::setPositionAndNormal(glm::vec3 _position, glm::vec3 _normal)
+void GraphVertex::setPositionAndNormal(Vector3d _position, Vector3d _normal)
 {
 	position = _position;
 	normal = _normal;
 }
 
-glm::vec3 GraphVertex::getPosition() const
+Vector3d GraphVertex::getPosition() const
 {
 	return position;
 }
 
-glm::vec3 GraphVertex::getNormal() const
+Vector3d GraphVertex::getNormal() const
 {
 	return normal;
 }
 
 
-void GraphVertex::setNodes(std::vector<Node *> _nodes, std::vector<float> _weights)
+void GraphVertex::setNodes(std::vector<Node *> _nodes, std::vector<double> _weights)
 {
 	nodes = _nodes;
 	weights = _weights;
@@ -47,15 +49,12 @@ void GraphVertex::setNodes(std::vector<Node *> _nodes, std::vector<float> _weigh
 
 void GraphVertex::updatePosition(void)
 {
-	if(!isFixed)
+	Vector3d newPosition = Vector3d(0.0f, 0.0f, 0.0f);
+	for(size_t i = 0 ; i < nodes.size(); i++)
 	{
-		glm::vec3 newPosition = glm::vec3(0.0f, 0.0f, 0.0f);
-		for(size_t i = 0 ; i < nodes.size(); i++)
-		{
-			newPosition += weights[i] * nodes[i]->applyMapping(position);
-		}
-		position = newPosition;
+		newPosition += weights[i] * nodes[i]->applyMapping(position_init);
 	}
+	position = newPosition;
 }
 
 std::vector<Node *> GraphVertex::getNodes()
@@ -63,7 +62,7 @@ std::vector<Node *> GraphVertex::getNodes()
 	return nodes;
 }
 
-std::vector<float> GraphVertex::getWeights()
+std::vector<double> GraphVertex::getWeights()
 {
 	return weights;
 }
@@ -83,44 +82,42 @@ void GraphVertex::updateNeighbor()
 void GraphVertex::setFixed(bool is_fixed)
 {
 	isFixed = is_fixed;
+	user_position = position;
 }
 
-// Deprecated
-float GraphVertex::getConValue()
+void GraphVertex::setHandled(bool is_Handled)
 {
-	if(!isFixed && isHandled)
-		return glm::length(position - user_position);
+	isHandled = is_Handled;
+}
+
+
+// Deprecated
+double GraphVertex::getConValue()
+{
+	if(isFixed || isHandled)
+		return (position - user_position).norm();
 	else
 		return 0.0f;
 }
 
-void GraphVertex::userSetPosition(glm::vec3 _user_position)
+void GraphVertex::userSetPosition(Vector3d _user_position)
 {
 	if(!isFixed)
 	{
-		position_init = position = user_position = _user_position;
+		user_position = _user_position;
 		isHandled = true;
 	}
 }
 
 
 // Get vertex's [ture position - user-specific position]
-Vector3f GraphVertex::getConTerm()
+Vector3d GraphVertex::getConTerm()
 {
-	if(!isFixed && isHandled)
+	if(isFixed || isHandled)
 	{
-		glm::vec3 conTerm = position - user_position;
-		return Vector3f(conTerm[0], conTerm[1], conTerm[2]);
+		Vector3d conTerm = position - user_position;
+		return conTerm;
 	}
 	else
-		return Vector3f(0.0f, 0.0f, 0.0f);
+		return Vector3d(0.0f, 0.0f, 0.0f);
 }
-
-
-
-
-
-
-
-
-
