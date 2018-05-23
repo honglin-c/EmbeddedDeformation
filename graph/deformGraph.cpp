@@ -429,10 +429,10 @@ void DeformGraph::updateNodesRt(VectorXd delta)
 	{
 		rot = delta.segment(n_i * x_rt, 9);
 		t = delta.segment(n_i * x_rt + 9, 3);
-		std::cout << n_i << "-th delta rot: " << std::endl;
-		std::cout << rot << std::endl;
-		std::cout << n_i << "-th delta t: " << std::endl;
-		std::cout << t << std::endl;
+		// std::cout << n_i << "-th delta rot: " << std::endl;
+		// std::cout << rot << std::endl;
+		// std::cout << n_i << "-th delta t: " << std::endl;
+		// std::cout << t << std::endl;
 
 		// std::cout << n_i << std::endl;
 	 	delta_rotation << rot(0), rot(1), rot(2),
@@ -757,7 +757,7 @@ VectorXd DeformGraph::descentDirection(const SparseMd &Jf, const VectorXd &fx, S
   	SparseMd JfTJf = Jf.transpose() * Jf;
   	SparseMd I(JfTJf.rows(), JfTJf.cols());
   	I.setIdentity();
-  	JfTJf += 1e-10 * I;
+  	JfTJf += 1e-15 * I;
   	if(symbolic)
   		chol.analyzePattern(JfTJf);
 	// Compute the sparse Cholesky Decomposition of Jf^T * Jf

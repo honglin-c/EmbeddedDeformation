@@ -69,7 +69,7 @@ float epsilon = 0.000001f;
 
 glm::vec3 lightPos(5.0f, 0.0f, 10.0f);
 glm::vec3 modelPos(0.0f, 0.0f, 0.0f);
-glm::vec3 deformPos(1.0f, 0.0f, 0.0f);
+glm::vec3 deformPos(2.0f, 0.0f, 0.0f);
 
 GLFWwindow *window;
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -470,7 +470,6 @@ void doDeformation()
     // print(inverse[1]);
     // print(inverse[2]);
 
-    // transform tail
     AABB aabb;
 
     // pin the former part of the tail
@@ -498,12 +497,22 @@ void doDeformation()
     // translation = Vector3d(0.0, 0.0, 0.0);
     // dgraph->applyTransformation(rotation, translation, aabb);
 
+
+    // transform the middle part of the tail
+    // aabb.setAABB(-0.039399, 0.038201, 0.583398, 0.787471, -0.272848, -0.110492);
+    // translation = Vector3d(0.2, -0.4, 0.03);
+    // dgraph->applyTransformation(rotation, translation, aabb);
+
     // transform the end of the tail
     // aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
     // aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232); // longer end
     aabb.setAABB(-0.016785, 0.016785, 0.900588, 0.919792, -0.358661, -0.336833);
-    translation = Vector3d(0.3, -0.7, 0.0);
+    translation = Vector3d(-0.20, -0.50, -0.30);
     dgraph->applyTransformation(rotation, translation, aabb);
+
+    rotation << 1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0;
 
     // transform the front paw
     aabb.setAABB(-0.10704, 0.10704, -0.001683, 0.052816, 0.587649, 0.691307);
