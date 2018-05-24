@@ -49,7 +49,7 @@ void GraphVertex::setNodes(std::vector<Node *> _nodes, std::vector<double> _weig
 
 void GraphVertex::updatePosition(void)
 {
-	Vector3d newPosition = Vector3d(0.0f, 0.0f, 0.0f);
+	Vector3d newPosition = Vector3d(0.0, 0.0, 0.0);
 	for(size_t i = 0 ; i < nodes.size(); i++)
 	{
 		newPosition += weights[i] * nodes[i]->applyMapping(position_init);
@@ -97,7 +97,7 @@ double GraphVertex::getConValue()
 	if(isFixed || isHandled)
 		return (position - user_position).norm();
 	else
-		return 0.0f;
+		return 0.0;
 }
 
 void GraphVertex::userSetPosition(Vector3d _user_position)
@@ -119,5 +119,5 @@ Vector3d GraphVertex::getConTerm()
 		return conTerm;
 	}
 	else
-		return Vector3d(0.0f, 0.0f, 0.0f);
+		return Vector3d(0.0, 0.0, 0.0);
 }

@@ -4,14 +4,14 @@
 Node::Node():transformed(false)
 {
 	rotation = Matrix3d::Identity();
-	translation = Vector3d(0.0f, 0.0f, 0.0f);
+	translation = Vector3d(0.0, 0.0, 0.0);
 }
 
 Node::Node(glm::vec3 _position):position(Vector3d(_position[0], _position[1], _position[2])),
 								transformed(false)
 {
 	rotation = Matrix3d::Identity();
-	translation = Vector3d(0.0f, 0.0f, 0.0f);
+	translation = Vector3d(0.0, 0.0, 0.0);
 }
 
 Node::~Node()
@@ -117,12 +117,12 @@ double Node::getRotValue()
 	double c22 = c2.dot(c2);
 	double c33 = c3.dot(c3);
 	return (c12 * c12 + c13 * c13 + c23 * c23
-		 + (c11 - 1.0f) * (c11 - 1.0f) + (c22 - 1.0f) * (c22 - 1.0f) + (c33 - 1.0f) * (c33 - 1.0f));
+		 + (c11 - 1.0) * (c11 - 1.0) + (c22 - 1.0) * (c22 - 1.0) + (c33 - 1.0) * (c33 - 1.0));
 }
 
 double Node::getRegValue()
 {
-	double reg = 0.0f;
+	double reg = 0.0;
 	for(auto n:neighbors)
 	{
 		Vector3d npos = n->getPosition();
@@ -143,9 +143,9 @@ VectorXd Node::getRotTerm()
 	rot(0) = c1.dot(c2);
 	rot(1) = c1.dot(c3);
 	rot(2) = c2.dot(c3);
-	rot(3) = c1.dot(c1) - 1.0f;
-	rot(4) = c2.dot(c2) - 1.0f;
-	rot(5) = c3.dot(c3) - 1.0f;
+	rot(3) = c1.dot(c1) - 1.0;
+	rot(4) = c2.dot(c2) - 1.0;
+	rot(5) = c3.dot(c3) - 1.0;
 	return rot;
 }
 

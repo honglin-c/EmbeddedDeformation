@@ -211,6 +211,22 @@ Model *ResourceManager::GetModel(std::string name)
 GLuint util::genVAO() { GLuint a; glGenVertexArrays(1, &a); return a; }
 GLuint util::genBuf() { GLuint a; glGenBuffers(1, &a); return a; }
 
+
+void ResourceManager::simplifySample(std::vector<glm::vec3> *sample_in, float radius)
+{
+    std::cout << "# (before) sample points : " << sample_in->size() << std::endl;
+    for(int i = 0; i < sample_in->size(); i++)
+    {
+        for(int j = i + 1; j < sample_in->size(); j++)
+        {
+            if(glm::length((*sample_in)[i] - (*sample_in)[j]) < radius)
+                sample_in->erase(sample_in->begin() + j);
+        }
+    }
+    std::cout << "# (after) sample points : " << sample_in->size() << std::endl;
+}
+
+
 void ResourceManager::LoadSample(const string &sampleFile, const string &name)
 {
     try
@@ -231,6 +247,8 @@ void ResourceManager::LoadSample(const string &sampleFile, const string &name)
             std::cout << x << " " << y << " " << z << std::endl;
             sample->push_back(glm::vec3(x, y, z));
         }
+        // Convert the random sample into a uniform sample
+        simplifySample(sample, 0.05f);
         Samples[name] = sample;
         fin.close();
     }

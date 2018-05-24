@@ -72,13 +72,13 @@ void DeformGraph::findKNN()
 
 		// dist_max = dist of k+1 nearest nodes
 		double dist_max = (heap.top()->getPosition() - pos).norm();
-		double norm_sum = 0.0f; // sum used to normalizing
+		double norm_sum = 0.0; // sum used to normalizing
 		double weight;
 
 		// Equation 4
 		for(auto d:dists)
 		{
-			weight = (1.0f - d / dist_max) * (1.0f - d / dist_max);
+			weight = (1.0 - d / dist_max) * (1.0 - d / dist_max);
 			weights.push_back(weight);
 			norm_sum += weight;
 		}
@@ -90,6 +90,14 @@ void DeformGraph::findKNN()
 			std::cout << "weight" << i <<":" << weights[i] << std::endl;
 			assert(weights[i] == weights[i]); // avoid nan
 		}
+
+		if(weights[3] < 1e-5)
+		{
+			std::cout << "catch tiny weight:" << std::endl;
+			for(auto d:dists)
+				std::cout << d << " ";
+			std::cout << std::endl << dist_max << std::endl;
+		} 
 
 		v->setNodes(vnodes, weights);
 
@@ -197,7 +205,7 @@ void DeformGraph::draw()
 
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	// glClear(GL_COLOR_BUFFER_BIT);
- 	// glColor3f(0.0f, 0.4f, 0.2f);
+ 	// glColor3f(0.0, 0.4f, 0.2f);
 	// for(auto v:vertices)
 	// {
 	// 	vector<Vector3d> vnodes;
@@ -249,7 +257,7 @@ void DeformGraph::applyTransformation(Matrix3d &rotation, Vector3d &translation,
 		if(!aabb.isInside(v->getPosition()))
 			continue;
 
-		position = normal = Vector3d(0.0f, 0.0f, 0.0f);
+		position = normal = Vector3d(0.0, 0.0, 0.0);
 		for(int i = 0; i < v->nodes.size(); i++)
 		{
 			position += v->weights[i] * v->nodes[i]->transformPosition(v->position_init);
@@ -277,28 +285,30 @@ void DeformGraph::update()
     sin90 = 1.0; cos90 = 0.0;
     sin45 = cos45 = std::sqrt(2.0) / 2.0;
 
-	rotation << cos90, 0.0f, sin90,
-                0.0f,  1.0f, 0.0f,
-                -sin90,0.0f, cos90;
+	rotation << cos90, 0.0, sin90,
+                0.0,  1.0, 0.0,
+                -sin90,0.0, cos90;
 	for(auto v:vertices)
 	{
-		position = normal = Vector3d(0.0f, 0.0f, 0.0f);
+		position = normal = Vector3d(0.0, 0.0, 0.0);
 		for(int i = 0; i < v->nodes.size(); i++)
 		{
 			position += v->weights[i] * v->nodes[i]->transformPosition(v->position_init);
 			normal += v->weights[i] * v->nodes[i]->transformNormal(v->normal_init);
-			std::cout << i << "-th weight " << i << ":" << v->weights[i] << std::endl;
-			std::cout << "accumulated position:";
-			print(position);
-			std::cout << "accumulated normal:";
-			print(normal);
-			Vector3d expected_pos = rotation * v->position_init;
-			Vector3d expected_normal = rotation.inverse() * v->normal_init;
-			std::cout << "expected position: " << std::endl;
-			std::cout << expected_pos << std::endl;
-			std::cout << "expected normal: " << std::endl;
-			std::cout << expected_normal << std::endl;
-
+			if(v->weights[i] < 1e-6)
+			{	
+				std::cout << i << "-th weight " << i << ":" << v->weights[i] << std::endl;
+				std::cout << "accumulated position:";
+				print(position);
+				std::cout << "accumulated normal:";
+				print(normal);
+				Vector3d expected_pos = rotation * v->position_init;
+				Vector3d expected_normal = rotation.inverse() * v->normal_init;
+				std::cout << "expected position: " << std::endl;
+				std::cout << expected_pos << std::endl;
+				std::cout << "expected normal: " << std::endl;
+				std::cout << expected_normal << std::endl;
+			}
 		}
 		v->setPositionAndNormal(position, normal);
 	}
@@ -325,7 +335,7 @@ void DeformGraph::debug(std::string s)
 void DeformGraph::optimize()
 {
 	updateOrder();
-	double Fx, Fx_old = 0.0f;
+	double Fx, Fx_old = 0.0;
   	SimplicialLDLT<SparseMd> chol;
 
 	VectorXd delta(x_order);
@@ -338,7 +348,7 @@ void DeformGraph::optimize()
 		// {
 		// 	for(int k = 0; k <Jf.cols(); k++)
 		// 	{
-		// 		if(std::fabs(Jf.coeffRef(j, k)) != 0.0f)
+		// 		if(std::fabs(Jf.coeffRef(j, k)) != 0.0)
 		// 			std::cout << "catch Jf(" << j << ", " << k << ") " << Jf.coeffRef(j, k) << std::endl;
 		// 	}
 		// }
@@ -383,13 +393,13 @@ void DeformGraph::optimize()
 
 		debug("2.5");
 
-		MatrixXd deltaFx = 2.0f * fx.transpose() * Jf;
+		MatrixXd deltaFx = 2.0 * fx.transpose() * Jf;
 
 		debug("3");
 
-		if(std::fabs(Fx - Fx_old) < epsilon * (1.0f + Fx)
-		&& deltaFx.maxCoeff() < 1e-2 * (1.0f + Fx)
-		&& delta.maxCoeff() < 1e-3 * (1.0f + delta.maxCoeff()))
+		if(std::fabs(Fx - Fx_old) < epsilon * (1.0 + Fx)
+		&& deltaFx.maxCoeff() < 1e-2 * (1.0 + Fx)
+		&& delta.maxCoeff() < 1e-3 * (1.0 + delta.maxCoeff()))
 		{
 			return;
 		}
@@ -457,7 +467,12 @@ void DeformGraph::updateOrder()
 		fx_order += 3 * n->getNeighbors().size();
 	std::cout << "Ereg end pos: " << fx_order << std::endl;
 	reg_end = fx_order;
-	fx_order += 3 * vertices.size();
+	for(auto v:vertices)
+	{
+		if(v->isFixed || v->isHandled)
+			fx_order += 3;
+	}
+	// fx_order += 3 * vertices.size();
 	std::cout << "x_order:" << x_order << " fx_order:" << fx_order << std::endl;
 }
 
@@ -511,18 +526,18 @@ SparseMd DeformGraph::getJf()
 
 				// c1 * c1 -1
 				if(rotj == 0)
-					tripletList.push_back(Tf(row + 3, col, std::sqrt(w_rot) * 2.0f * rotation(roti, 0)));
-					// Jf.insert(row + 3, col) = 2.0f * rotation(roti, 0);
+					tripletList.push_back(Tf(row + 3, col, std::sqrt(w_rot) * 2.0 * rotation(roti, 0)));
+					// Jf.insert(row + 3, col) = 2.0 * rotation(roti, 0);
 
 				// c2 * c2 -1
 				if(rotj == 1)
-					tripletList.push_back(Tf(row + 4, col, std::sqrt(w_rot) * 2.0f * rotation(roti, 1)));
-					// Jf.insert(row + 4, col) = 2.0f * rotation(roti, 1);
+					tripletList.push_back(Tf(row + 4, col, std::sqrt(w_rot) * 2.0 * rotation(roti, 1)));
+					// Jf.insert(row + 4, col) = 2.0 * rotation(roti, 1);
 
 				// c3 * c3 -1
 				if(rotj == 2)
-					tripletList.push_back(Tf(row + 5, col, std::sqrt(w_rot) * 2.0f * rotation(roti, 2)));
-					// Jf.insert(row + 5, col) = 2.0f * rotation(roti, 2);
+					tripletList.push_back(Tf(row + 5, col, std::sqrt(w_rot) * 2.0 * rotation(roti, 2)));
+					// Jf.insert(row + 5, col) = 2.0 * rotation(roti, 2);
 			}
 		}
 	}
@@ -562,8 +577,8 @@ SparseMd DeformGraph::getJf()
 				// not consider t_k here
 				this_row = row + 3 * neighbor_count + ti;
 				this_col = ci * x_rt + 9 + ti;
-				tripletList.push_back(Tf(this_row, this_col, std::sqrt(w_reg) * 1.0f));
-				// Jf.insert(this_row, this_col) = 1.0f;
+				tripletList.push_back(Tf(this_row, this_col, std::sqrt(w_reg) * 1.0));
+				// Jf.insert(this_row, this_col) = 1.0;
 			}
 
 			neighbor_count++;
@@ -592,8 +607,8 @@ SparseMd DeformGraph::getJf()
 					{
 						this_row = row + 3 * neighbor_count + ti;
 						this_col = col + ti;
-						tripletList.push_back(Tf(this_row, this_col, std::sqrt(w_reg) * (-1.0f)));
-						// Jf.insert(this_row, this_col) = -1.0f;
+						tripletList.push_back(Tf(this_row, this_col, std::sqrt(w_reg) * (-1.0)));
+						// Jf.insert(this_row, this_col) = -1.0;
 					}
 				}
 				ci++; // increase column index(ci-th node's R)
@@ -614,7 +629,7 @@ SparseMd DeformGraph::getJf()
 		if(!v->isFixed && !v->isHandled)
 		{
 			// If the vertex is not constrainted
-			row += 3;
+			// row += 3;
 			continue;
 		}
 
@@ -678,8 +693,8 @@ SparseMd DeformGraph::getJf()
 // double DeformGraph::dRegTerm(Vector3d &regTerm, int i)
 // {
 // 	assert(i >= 0 && i < 3);
-// 	if(regTerm.norm() == 0.0f)
-// 		return 0.0f;
+// 	if(regTerm.norm() == 0.0)
+// 		return 0.0;
 // 	return sqrt10 * regTerm(i) / std::sqrt(regTerm(0) * regTerm(0) + regTerm(1) * regTerm(1) + regTerm(2) * regTerm(2));
 // }
 
@@ -687,8 +702,8 @@ SparseMd DeformGraph::getJf()
 // double DeformGraph::dConTerm(Vector3d &conTerm, int i)
 // {
 // 	assert(i >= 0 && i < 3);
-// 	if(conTerm.norm() == 0.0f)
-// 		return 0.0f;
+// 	if(conTerm.norm() == 0.0)
+// 		return 0.0;
 // 	return 10 * conTerm(i) / std::sqrt(conTerm(0) * conTerm(0) + conTerm(1) * conTerm(1) + conTerm(2) * conTerm(2));
 // }
 
@@ -704,8 +719,8 @@ VectorXd DeformGraph::getfx()
 	for(auto n:nodes)
 	{
 		rotTerm = n->getRotTerm();
-		std::cout << "get Rot term: " << std::endl;
-		std::cout << rotTerm << std::endl;
+		// std::cout << "get Rot term: " << std::endl;
+		// std::cout << rotTerm << std::endl;
 		fx[index + 0] = std::sqrt(w_rot) * rotTerm(0);
 		fx[index + 1] = std::sqrt(w_rot) * rotTerm(1);
 		fx[index + 2] = std::sqrt(w_rot) * rotTerm(2);
@@ -737,7 +752,7 @@ VectorXd DeformGraph::getfx()
 	{
 		if(!v->isFixed && !v->isHandled)
 		{
-			index += 3;
+			// index += 3;
 			continue;
 		}
 		VectorXd conTerm = v->getConTerm();
@@ -755,9 +770,9 @@ VectorXd DeformGraph::descentDirection(const SparseMd &Jf, const VectorXd &fx, S
 {
 	// Solving:
   	SparseMd JfTJf = Jf.transpose() * Jf;
-  	SparseMd I(JfTJf.rows(), JfTJf.cols());
-  	I.setIdentity();
-  	JfTJf += 1e-15 * I;
+  	// SparseMd I(JfTJf.rows(), JfTJf.cols());
+  	// I.setIdentity();
+  	// JfTJf += 1e-15 * I;
   	if(symbolic)
   		chol.analyzePattern(JfTJf);
 	// Compute the sparse Cholesky Decomposition of Jf^T * Jf
@@ -767,6 +782,29 @@ VectorXd DeformGraph::descentDirection(const SparseMd &Jf, const VectorXd &fx, S
   	{
   		std::cout << "ERROR: Cholesky Decompostion Fail! JfTJf is not positive definite" << std::endl;
 
+  		for(int i = 0; i < JfTJf.rows(); i++)
+  		{
+  			VectorXd this_row = JfTJf.row(i);
+  			double norm2 = this_row.norm();
+  			if(norm2 < 1e-8){
+  				std::cout << "Catch rows with nearly 0 norm: " << i << "  " << norm2 << std::endl;
+  				int count = 0;
+  				for(auto v:vertices)
+  				{
+  					if(v->isFixed || v->isHandled)
+  					{
+  						if(count + reg_end + 4 > i)
+  						{
+  							std::cout << "weight: " << v->weights[i - count - reg_end] << std::endl;
+  							break;
+  						}
+  						else
+  							count += 4;
+  					}
+  				}
+  			}
+  		} 
+
   		// Calculate all the eigenvalues and catch the negative ones
   		MatrixXd temp = MatrixXd(JfTJf);
   		SelfAdjointEigenSolver<MatrixXd> solver(temp);
@@ -775,7 +813,7 @@ VectorXd DeformGraph::descentDirection(const SparseMd &Jf, const VectorXd &fx, S
   		for(int k = 0; k < size; k++)
   		{
   			complex<double> result = solver.eigenvalues()(k);
-  			if(result.real() < 0.0f)
+  			if(result.real() < 0.0)
   			{
   				std::cout << "catch negative eigenvalue (" << k << ") : " << result << std::endl;
   				x = solver.eigenvectors().col(k);
@@ -787,7 +825,7 @@ VectorXd DeformGraph::descentDirection(const SparseMd &Jf, const VectorXd &fx, S
   	}
 
 	// get the solution to the given right hand side
-  	VectorXd x = chol.solve(-1.0f * Jf.transpose() * fx);
+  	VectorXd x = chol.solve(-1.0 * Jf.transpose() * fx);
   	return x;
 }
 

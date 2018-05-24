@@ -90,6 +90,9 @@ private:
     static Texture2D loadTexture2DFromFile(const string &file, GLboolean alpha);
 
     static Texture3D loadTexture3DFromFile(const string &file);
+
+    // Convert the sample into a uniform sample of a specific radius
+    static void simplifySample(std::vector<glm::vec3> *sample_in, float radius);
 };
 
 namespace util {

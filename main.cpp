@@ -473,8 +473,8 @@ void doDeformation()
     AABB aabb;
 
     // pin the former part of the tail
-    aabb.setAABB(-0.129416, 0.092578, 0.410533, 0.592776, -0.055549, 0.103149);
-    dgraph->addFixedConstraint(aabb);
+    // aabb.setAABB(-0.129416, 0.092578, 0.410533, 0.592776, -0.055549, 0.103149);
+    // dgraph->addFixedConstraint(aabb);
 
     // pin the body
     aabb.setAABB(-0.144363, 0.144363, 0.202625, 0.602783, -0.125669, 0.758065);
@@ -488,14 +488,14 @@ void doDeformation()
     // aabb.setAABB(-0.16731, 0.126305, -0.001683, 0.304127, 0.10341, 0.691942);
     // dgraph->addFixedConstraint(aabb);
 
-    // pin the head
+    // pin the head or rotate the head
     aabb.setAABB(-0.1678, 0.171623, 0.022794, 0.700577, 0.689812, 0.973195);
-    dgraph->addFixedConstraint(aabb);
-    // rotation << cos90, 0.0f, sin90,
-    //             0.0f,  1.0f, 0.0f,
-    //             -sin90,0.0f, cos90;
-    // translation = Vector3d(0.0, 0.0, 0.0);
-    // dgraph->applyTransformation(rotation, translation, aabb);
+    // dgraph->addFixedConstraint(aabb);
+    rotation << cos90, 0.0f, -sin90,
+                0.0f,  1.0f, 0.0f,
+                sin90,0.0f, cos90;  // rotate to -90 degree around the y axis
+    translation = Vector3d(0.0, 0.0, 0.0);
+    dgraph->applyTransformation(rotation, translation, aabb);
 
 
     // transform the middle part of the tail
@@ -503,23 +503,23 @@ void doDeformation()
     // translation = Vector3d(0.2, -0.4, 0.03);
     // dgraph->applyTransformation(rotation, translation, aabb);
 
-    // transform the end of the tail
-    // aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
-    // aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232); // longer end
-    aabb.setAABB(-0.016785, 0.016785, 0.900588, 0.919792, -0.358661, -0.336833);
-    translation = Vector3d(-0.20, -0.50, -0.30);
-    dgraph->applyTransformation(rotation, translation, aabb);
-
     rotation << 1.0, 0.0, 0.0,
                 0.0, 1.0, 0.0,
                 0.0, 0.0, 1.0;
 
-    // transform the front paw
+    // transform the end of the tail
+    // aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
+    // aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232); // longer end
+    aabb.setAABB(-0.016785, 0.016785, 0.900588, 0.919792, -0.358661, -0.336833);
+    translation = Vector3d(0.0, -0.60, -0.30);
+    dgraph->applyTransformation(rotation, translation, aabb);
+
+    // transform the front paws
     aabb.setAABB(-0.10704, 0.10704, -0.001683, 0.052816, 0.587649, 0.691307);
     translation = Vector3d(0.0, 0.1, 0.25);
     dgraph->applyTransformation(rotation, translation, aabb);
 
-    // transform the rear paw
+    // transform the rear paws
     aabb.setAABB(-0.16731, 0.16731, -0.002068, 0.093362, 0.015152, 0.165848);
     translation = Vector3d(0.0, 0.05, -0.25);
     dgraph->applyTransformation(rotation, translation, aabb);

@@ -59,7 +59,7 @@ private:
 	const double sqrt10 = 3.16227766;
 	const double epsilon = 1e-6;
 	const int x_rt = 12;
-	const double w_rot = 2.0;
+	const double w_rot = 1.0;
 	const double w_reg = 10.0;
 	const double w_con = 100.0;
 
