@@ -67,7 +67,7 @@ GLfloat lastFrame = 0.0f;
 
 float epsilon = 0.000001f;
 
-glm::vec3 lightPos(5.0f, 0.0f, 10.0f);
+glm::vec3 lightPos(-8.0f, 0.0f, 10.0f);
 glm::vec3 modelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 deformPos(2.0f, 0.0f, 0.0f);
 
@@ -300,17 +300,17 @@ void display()
     phong.SetFloat("material.shininess", 0.0f);
 
     // Draw the model Cat
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     model = glm::mat4();
     model = glm::translate(model, modelPos);
     phong.SetMatrix4("model", model);
     // Set material properties.
-    phong.SetVector3f("material.ambient", glm::vec3(1.0f, 1.0f, 0.25f));
-    phong.SetVector3f("material.diffuse", glm::vec3(1.0f, 1.0f, 0.2f));
-    phong.SetVector3f("material.specular", glm::vec3(0.9f, 0.8f, 0.1f));
-    phong.SetFloat("material.shininess", 0.3f);
+    phong.SetVector3f("material.ambient", glm::vec3(0.4f, 0.5f, 0.6f));
+    phong.SetVector3f("material.diffuse", glm::vec3(0.5f, 0.7f, 0.9f));
+    phong.SetVector3f("material.specular", glm::vec3(0.06f, 0.08f, 0.1f));
+    phong.SetFloat("material.shininess", 0.0f);
     Model *originalModel = ResourceManager::GetModel(modelName);
-    originalModel->Draw(phong);
+    // originalModel->Draw(phong);
 
     Shader color = ResourceManager::GetShader("color");
     color.Use();
@@ -346,7 +346,7 @@ void display()
                     // Translate to the particles position.
                     model = glm::translate(model, position);
                     color.SetMatrix4("model", model);
-                    sphere->Draw(color);
+                    // sphere->Draw(color);
                 }
             }
             catch (std::exception e)
@@ -371,7 +371,7 @@ void display()
                 // Translate to the particles position.
                 model = glm::translate(model, position);
                 color.SetMatrix4("model", model);
-                sphere->Draw(color);
+                // sphere->Draw(color);
             }
         }
         catch (std::exception e)
@@ -395,15 +395,16 @@ void display()
     // deformModel->DrawVertices();
 
     // Draw the deform model Cat that is directly deformed
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    phong.Use();
     model = glm::mat4();
-    model = glm::translate(model, deformPos);
+    model = glm::translate(model, modelPos);
     phong.SetMatrix4("model", model);
     // Set material properties.
-    phong.SetVector3f("material.ambient", glm::vec3(0.25f, 1.0f, 1.0f));
-    phong.SetVector3f("material.diffuse", glm::vec3(1.0f, 1.0f, 0.2f));
-    phong.SetVector3f("material.specular", glm::vec3(0.9f, 0.8f, 0.1f));
-    phong.SetFloat("material.shininess", 0.3f);
+    phong.SetVector3f("material.ambient", glm::vec3(0.4f, 0.5f, 0.6f));
+    phong.SetVector3f("material.diffuse", glm::vec3(0.5f, 0.7f, 0.9f));
+    phong.SetVector3f("material.specular", glm::vec3(0.06f, 0.08f, 0.1f));
+    phong.SetFloat("material.shininess", 0.0f);
     Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
     deformModel->Draw(phong);
 
@@ -521,7 +522,7 @@ void doDeformation()
 
     // transform the rear paws
     aabb.setAABB(-0.16731, 0.16731, -0.002068, 0.093362, 0.015152, 0.165848);
-    translation = Vector3d(0.0, 0.05, -0.25);
+    translation = Vector3d(0.0, 0.00, -0.25);
     dgraph->applyTransformation(rotation, translation, aabb);
 
     // transform the left leg

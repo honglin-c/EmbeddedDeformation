@@ -1,0 +1,14 @@
+# CMakeFiles
+CMakeFiles/*
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# executable
+Deformation
+
+# log
+*.txt
+
+# deform result
+models/deform/*

@@ -60,7 +60,7 @@ void Mesh::Draw(const Shader& shader)
 void Mesh::setupMesh()
 {
     // Create buffers/arrays
-    glGenVertexArrays(1, &VAO);
+    glGenVertexArrays(1, &this->VAO);
     glGenBuffers(1, &this->VBO);
     glGenBuffers(1, &this->EBO);
 

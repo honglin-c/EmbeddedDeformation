@@ -150,7 +150,7 @@ vector<Vertex> DeformGraph::returnVertices()
 	vector<Vertex> ret;
 	for(auto v:vertices)
 	{
-		glm::vec3 position = glm::vec3(3.5f * v->position[0], 3.5f * v->position[1], 3.5f * v->position[2]);
+		glm::vec3 position = glm::vec3(v->position[0], v->position[1], v->position[2]);
 		glm::vec3 normal = glm::vec3(v->normal[0], v->normal[1], v->normal[2]);
 		Vertex rv = {position, normal};
 		ret.push_back(rv);
