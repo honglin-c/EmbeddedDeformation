@@ -215,7 +215,6 @@ GLuint util::genBuf() { GLuint a; glGenBuffers(1, &a); return a; }
 
 void ResourceManager::simplifySample(std::vector<glm::vec3> *sample_in, float radius)
 {
-    std::cout << "# (before) sample points : " << sample_in->size() << std::endl;
     for(int i = 0; i < sample_in->size(); i++)
     {
         for(int j = i + 1; j < sample_in->size(); j++)
@@ -224,7 +223,6 @@ void ResourceManager::simplifySample(std::vector<glm::vec3> *sample_in, float ra
                 sample_in->erase(sample_in->begin() + j);
         }
     }
-    std::cout << "# (after) sample points : " << sample_in->size() << std::endl;
 }
 
 
@@ -235,17 +233,16 @@ void ResourceManager::LoadSample(const string &sampleFile, const string &name)
         Sample *sample = new Sample();
         std::ifstream fin;
         fin.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        std::cout << "open " << sampleFile << std::endl;
+        // std::cout << "open " << sampleFile << std::endl;
         fin.open(sampleFile);
         float x, y, z;
         int n;
     
         fin >> n;
-        std::cout << n << std::endl;
+        // std::cout << n << std::endl;
         for(int i = 0; i < n; i++)
         {
             fin >> x >> y >> z;
-            std::cout << x << " " << y << " " << z << std::endl;
             sample->push_back(glm::vec3(x, y, z));
         }
         // Convert the random sample into a uniform sample
@@ -277,7 +274,7 @@ void ResourceManager::LoadVertices(string objModelFile, string name)
         Model *model = new Model("objModelFile");
         std::ifstream fin;
         fin.exceptions(std::ifstream::badbit);
-        std::cout << "open " << objModelFile << std::endl;
+        // std::cout << "open " << objModelFile << std::endl;
         fin.open(objModelFile);
         float x, y, z;
         string line_header;
@@ -331,7 +328,7 @@ AABB ResourceManager::GetAABB(const string &objModelFile)
     try
     {
         fin.exceptions(std::ifstream::badbit);
-        std::cout << "AABB: open " << objModelFile << std::endl;
+        // std::cout << "AABB: open " << objModelFile << std::endl;
         fin.open(objModelFile);
 
         int header_count = 0;
@@ -339,7 +336,6 @@ AABB ResourceManager::GetAABB(const string &objModelFile)
         {
             fin >> line_header;
             if(line_header == "####") header_count++;
-            std::cout << line_header << std::endl;
         }while(header_count < 3);
 
         fin >> tmp >> x >> y >> z;
@@ -355,8 +351,8 @@ AABB ResourceManager::GetAABB(const string &objModelFile)
             if(z > zmax) zmax = z;
             fin >> tmp >> x >> y >> z;
         }
-        std::cout << "AABB " << objModelFile << std::endl;
-        std::cout << xmin << " " << xmax << " " << ymin << " " << ymax << " " << zmin << " " << zmax << std::endl;
+        // std::cout << "AABB " << objModelFile << std::endl;
+        // std::cout << xmin << " " << xmax << " " << ymin << " " << ymax << " " << zmin << " " << zmax << std::endl;
         aabb.setAABB(xmin, xmax, ymin, ymax, zmin, zmax);
 
         fin.close();

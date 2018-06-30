@@ -1,0 +1,6 @@
+vertex num: 7126
+node num: 933
+constraint_count: 4249
+avg solve time: 622.92
+avg def time: 1.7624
+iteration: 40

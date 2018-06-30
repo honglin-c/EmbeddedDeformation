@@ -40,7 +40,6 @@ public:
 	// Fixed all the vertices within a aabb
 	void addFixedConstraint(AABB &aabb);
 	void draw();
-	void outputToFile();
 	void print(const Vector3d &v);
 
 	void print() const;
@@ -55,14 +54,13 @@ public:
 private:
 	const std::string modelName;
 	const int k = 4;
-	const int max_iter = 30;
+	const int max_iter = 40;
 	const double sqrt10 = 3.16227766;
 	const double epsilon = 1e-6;
 	const int x_rt = 12;
 	const double w_rot = 2.3;
 	const double w_reg = 10.0;
 	const double w_con = 100.0;
-
 
 	int rot_end;
 	int reg_end;
@@ -89,12 +87,6 @@ private:
 	SparseMd getJf();
 	VectorXd getfx();
 	VectorXd descentDirection(const SparseMd &Jf, const VectorXd &fx, SimplicialLDLT<SparseMd> &chol, bool symbolic);
-	// Golden Section Search - not currently working
-	double exactLineSearch();
-
-	// // Deprecated: Get term[i] / norm2(term)
-	// double dRegTerm(Vector3d &regTerm, int i);
-	// double dConTerm(Vector3d &conTerm, int i);
 
 	// Perform x_k+1 = x_k + delta
 	void updateNodesRt(VectorXd delta);
@@ -102,7 +94,7 @@ private:
 
 //============================================================================
 	void debug(std::string s);
-
+	int constraint_count; // use to measure benchmark
 };
 
 #endif
