@@ -55,11 +55,11 @@ public:
 private:
 	const std::string modelName;
 	const int k = 4;
-	const int max_iter = 20;
+	const int max_iter = 30;
 	const double sqrt10 = 3.16227766;
 	const double epsilon = 1e-6;
 	const int x_rt = 12;
-	const double w_rot = 1.0;
+	const double w_rot = 2.3;
 	const double w_reg = 10.0;
 	const double w_con = 100.0;
 

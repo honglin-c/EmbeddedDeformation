@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+// Measure time
+#include <ctime>
 // OpenGL include
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -26,7 +28,7 @@
 #include "graph/node.h"
 #include "graph/boundingObject.h"
 
-string modelName = "cat";
+string modelName = "giraffe";
 
 // Function prototypes.
 void optionInit(GLFWwindow *window);
@@ -67,9 +69,9 @@ GLfloat lastFrame = 0.0f;
 
 float epsilon = 0.000001f;
 
-glm::vec3 lightPos(-8.0f, 0.0f, 10.0f);
-glm::vec3 modelPos(0.0f, 0.0f, 0.0f);
-glm::vec3 deformPos(2.0f, 0.0f, 0.0f);
+glm::vec3 lightPos(-20.0f, 0.0f, 30.0f);
+glm::vec3 modelPos(0.0f,  -1.0f, 0.0f);
+glm::vec3 deformPos(2.0f, -1.0f, 0.0f);
 
 GLFWwindow *window;
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -80,6 +82,8 @@ GLuint width = 1280, height = 720;
 
 // Deformation Graph
 DeformGraph * dgraph = nullptr;
+
+using namespace std;
 
 // Start our application and run our Application loop.
 int main()
@@ -281,7 +285,6 @@ void display()
     glm::mat4 projection = glm::perspective(camera.Zoom, (float) width / (float) height,
                                             camera.NearClippingPlaneDistance, camera.FarClippingPlaneDistance);
 
-    // Draw the rigid bodies (cubes).
     Shader phong = ResourceManager::GetShader("phong");
     phong.Use();
     phong.SetMatrix4("view", view);
@@ -293,11 +296,6 @@ void display()
     phong.SetVector3f("light.ambient", glm::vec3(0.85f, 0.85f, 0.85f));
     phong.SetVector3f("light.diffuse", glm::vec3(0.85f, 0.85f, 0.85f));
     phong.SetVector3f("light.specular", glm::vec3(0.90f, 0.90f, 0.90f));
-    // Set material properties.
-    phong.SetVector3f("material.ambient", glm::vec3(1.0f, 1.0f, 1.0f));
-    phong.SetVector3f("material.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
-    phong.SetVector3f("material.specular", glm::vec3(0.0f));
-    phong.SetFloat("material.shininess", 0.0f);
 
     // Draw the model Cat
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -309,8 +307,17 @@ void display()
     phong.SetVector3f("material.diffuse", glm::vec3(0.5f, 0.7f, 0.9f));
     phong.SetVector3f("material.specular", glm::vec3(0.06f, 0.08f, 0.1f));
     phong.SetFloat("material.shininess", 0.0f);
+    // Set the scaling
+    if(modelName == "giraffe")
+    {
+        glm::mat4 scaling(0.2f, 0.0f,  0.0f,  0.0f,
+                          0.0f,  0.2f, 0.0f,  0.0f,
+                          0.0f,  0.0f,  0.2f, 0.0f,
+                          0.0f,  0.0f,  0.0f,  1.0f);
+        phong.SetMatrix4("scaling", scaling);
+    }
     Model *originalModel = ResourceManager::GetModel(modelName);
-    // originalModel->Draw(phong);
+    originalModel->Draw(phong);
 
     Shader color = ResourceManager::GetShader("color");
     color.Use();
@@ -364,7 +371,7 @@ void display()
         {
             for (auto pos:deform_sample)
             {
-                glm::vec3 position = pos + deformPos;
+                glm::vec3 position = pos * 0.2f + deformPos;
                 color.SetVector3f("givenColor", glm::vec3(1.0f, 0.0f, 0.0f));
                 // Draw the particle.
                 model = glm::mat4();
@@ -406,7 +413,7 @@ void display()
     phong.SetVector3f("material.specular", glm::vec3(0.06f, 0.08f, 0.1f));
     phong.SetFloat("material.shininess", 0.0f);
     Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
-    deformModel->Draw(phong);
+    // deformModel->Draw(phong);
 
 }
 
@@ -439,103 +446,162 @@ void deformGraph()
 
 void doDeformation()
 {
-    double sin45, cos45, sin90, cos90;
-    sin90 = 1.0; cos90 = 0.0;
-    sin45 = cos45 = std::sqrt(2.0) / 2.0;
-    // glm::mat3 rotation(cos45,  0.0f,  sin45,
-    //                    0.0f,   1.0f,  0.0f,
-    //                    -sin45, 0.0f,  cos45);
-    Matrix3d rotation;
-    // rotation << 1.0, 0.0, 0.0,
-    //             0.0, 1.0, 0.0,
-    //             0.0, 0.0, 1.0;
-    rotation << cos45, 0.0f, sin45,
-                0.0f,  1.0f, 0.0f,
-                -sin45,0.0f, cos45;
-    // rotation << cos90, 0.0f, sin90,
-    //             0.0f,  1.0f, 0.0f,
-    //             -sin90,0.0f, cos90;
-    // rotation << 1.0f, 0.0f, 0.0f,
-    //             0.0f, 1.0f, 0.0f,
-    //             0.0f, 0.0f, 1.0f;
-
-    std::cout << "rotation: " << std::endl;
-    std::cout << rotation << std::endl;
-
-    Vector3d translation(0.0, 0.0, 0.0);
-
-    std::cout << "rotation inv:" << std::endl;
-    Matrix3d inverse = rotation.inverse();
-    std::cout << inverse << std::endl;
-    // print(inverse[0]);
-    // print(inverse[1]);
-    // print(inverse[2]);
-
     AABB aabb;
-
-    // pin the former part of the tail
-    // aabb.setAABB(-0.129416, 0.092578, 0.410533, 0.592776, -0.055549, 0.103149);
-    // dgraph->addFixedConstraint(aabb);
-
-    // pin the body
-    aabb.setAABB(-0.144363, 0.144363, 0.202625, 0.602783, -0.125669, 0.758065);
-    dgraph->addFixedConstraint(aabb);
-
-    // pin the rear legs
-    // aabb.setAABB(-0.16731, 0.16731, -0.002068, 0.429177, -0.064655, 0.270305);
-    // dgraph->addFixedConstraint(aabb);
-
-    // pin the right leg
-    // aabb.setAABB(-0.16731, 0.126305, -0.001683, 0.304127, 0.10341, 0.691942);
-    // dgraph->addFixedConstraint(aabb);
-
-    // pin the head or rotate the head
-    aabb.setAABB(-0.1678, 0.171623, 0.022794, 0.700577, 0.689812, 0.973195);
-    // dgraph->addFixedConstraint(aabb);
-    rotation << cos90, 0.0f, -sin90,
-                0.0f,  1.0f, 0.0f,
-                sin90,0.0f, cos90;  // rotate to -90 degree around the y axis
-    translation = Vector3d(0.0, 0.0, 0.0);
-    dgraph->applyTransformation(rotation, translation, aabb);
-
-
-    // transform the middle part of the tail
-    // aabb.setAABB(-0.039399, 0.038201, 0.583398, 0.787471, -0.272848, -0.110492);
-    // translation = Vector3d(0.2, -0.4, 0.03);
-    // dgraph->applyTransformation(rotation, translation, aabb);
-
+    Matrix3d rotation;
+    Vector3d translation(0.0, 0.0, 0.0);
     rotation << 1.0, 0.0, 0.0,
                 0.0, 1.0, 0.0,
                 0.0, 0.0, 1.0;
 
-    // transform the end of the tail
-    // aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
-    // aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232); // longer end
-    aabb.setAABB(-0.016785, 0.016785, 0.900588, 0.919792, -0.358661, -0.336833);
-    translation = Vector3d(0.0, -0.60, -0.30);
-    dgraph->applyTransformation(rotation, translation, aabb);
+    double sin45, cos45, sin90, cos90, sin30, cos30;
+    sin90 = 1.0; cos90 = 0.0;
+    sin45 = cos45 = std::sqrt(2.0) / 2.0;
+    sin30 = 1.0 / std::sqrt(3.0);
+    cos30 = std::sqrt(3.0) / 3.0;
 
-    // transform the front paws
-    aabb.setAABB(-0.10704, 0.10704, -0.001683, 0.052816, 0.587649, 0.691307);
-    translation = Vector3d(0.0, 0.1, 0.25);
-    dgraph->applyTransformation(rotation, translation, aabb);
+    if(modelName == "giraffe")
+    {
+        // pin the body
+        aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "body.obj");
+        dgraph->addFixedConstraint(aabb);
 
-    // transform the rear paws
-    aabb.setAABB(-0.16731, 0.16731, -0.002068, 0.093362, 0.015152, 0.165848);
-    translation = Vector3d(0.0, 0.00, -0.25);
-    dgraph->applyTransformation(rotation, translation, aabb);
+        // Transform the front right hoof
+        aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "front_right_hoof.obj");
 
-    // transform the left leg
-    // aabb.setAABB(-0.1678, 0.171623, -0.002068, 0.919792, -0.358661, 0.973195);
-    // translation = Vector3d(0.0, 0.3, 0.3);
-    // dgraph->applyTransformation(rotation, translation, aabb);
+        translation = Vector3d(-2.5, 0.0, 0.8);
+        dgraph->applyTransformation(rotation, translation, aabb);
 
-    // aabb.setAABB(-0.16731, 0.126305, -0.001683, 0.304127, 0.10341, 0.691942);
-    // dgraph->applyTransformation(rotation, translation, aabb);
+        // Transform the front left hoof
+        aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "front_left_hoof2.obj");
+        // rotation <<  cos45, 0.0f,-sin45,
+        //               0.0f, 1.0f,  0.0f,
+        //              sin45, 0.0f, cos45;
+        translation = Vector3d(3.0, 0.0, 0.8);
+        dgraph->applyTransformation(rotation, translation, aabb);
 
-    // translation = glm::vec3(0.0f, 0.0f, 0.0f);
+        rotation << 1.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 0.0, 1.0;
 
-    // dgraph->applyTransformation(rotation, translation, aabb);
+        // Transform the front right knee
+        aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "front_right_hoof2.obj");
+        translation = Vector3d(-1.7, 0.0, 0.3);
+        // rotation <<  cos45, -sin45, 0.0f,
+        //              sin45,  cos45, 0.0f,
+        //               0.0f,   0.0f, 1.0f;
+        dgraph->applyTransformation(rotation, translation, aabb);
+
+        // Transform the front left knee
+        aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "front_left_hoof.obj");
+        translation = Vector3d(1.9, 0.0, 0.4);
+        dgraph->applyTransformation(rotation, translation, aabb);
+        
+        // Transform the head
+        aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "head.obj");
+        translation = Vector3d(0.0, -9.0, 6.0);
+        dgraph->applyTransformation(rotation, translation, aabb);
+    }
+    else if (modelName == "cat")
+    {
+        double sin45, cos45, sin90, cos90;
+        sin90 = 1.0; cos90 = 0.0;
+        sin45 = cos45 = std::sqrt(2.0) / 2.0;
+        // glm::mat3 rotation(cos45,  0.0f,  sin45,
+        //                    0.0f,   1.0f,  0.0f,
+        //                    -sin45, 0.0f,  cos45);
+        Matrix3d rotation;
+        // rotation << 1.0, 0.0, 0.0,
+        //             0.0, 1.0, 0.0,
+        //             0.0, 0.0, 1.0;
+        rotation << cos45, 0.0f, sin45,
+                    0.0f,  1.0f, 0.0f,
+                    -sin45,0.0f, cos45;
+        // rotation << cos90, 0.0f, sin90,
+        //             0.0f,  1.0f, 0.0f,
+        //             -sin90,0.0f, cos90;
+        // rotation << 1.0f, 0.0f, 0.0f,
+        //             0.0f, 1.0f, 0.0f,
+        //             0.0f, 0.0f, 1.0f;
+
+        std::cout << "rotation: " << std::endl;
+        std::cout << rotation << std::endl;
+
+        Vector3d translation(0.0, 0.0, 0.0);
+
+        std::cout << "rotation inv:" << std::endl;
+        Matrix3d inverse = rotation.inverse();
+        std::cout << inverse << std::endl;
+        // print(inverse[0]);
+        // print(inverse[1]);
+        // print(inverse[2]);
+
+        AABB aabb;
+
+        // pin the former part of the tail
+        // aabb.setAABB(-0.129416, 0.092578, 0.410533, 0.592776, -0.055549, 0.103149);
+        // dgraph->addFixedConstraint(aabb);
+
+        // pin the body
+        aabb.setAABB(-0.144363, 0.144363, 0.202625, 0.602783, -0.125669, 0.758065);
+        dgraph->addFixedConstraint(aabb);
+
+        // pin the rear legs
+        // aabb.setAABB(-0.16731, 0.16731, -0.002068, 0.429177, -0.064655, 0.270305);
+        // dgraph->addFixedConstraint(aabb);
+
+        // pin the right leg
+        // aabb.setAABB(-0.16731, 0.126305, -0.001683, 0.304127, 0.10341, 0.691942);
+        // dgraph->addFixedConstraint(aabb);
+
+        // pin the head or rotate the head
+        aabb.setAABB(-0.1678, 0.171623, 0.022794, 0.700577, 0.689812, 0.973195);
+        // dgraph->addFixedConstraint(aabb);
+        rotation << cos90, 0.0f, -sin90,
+                    0.0f,  1.0f, 0.0f,
+                    sin90,0.0f, cos90;  // rotate to 90 degree around the y axis
+        translation = Vector3d(0.0, 0.0, 0.0);
+        dgraph->applyTransformation(rotation, translation, aabb);
+
+
+        // transform the middle part of the tail
+        // aabb.setAABB(-0.039399, 0.038201, 0.583398, 0.787471, -0.272848, -0.110492);
+        // translation = Vector3d(0.2, -0.4, 0.03);
+        // dgraph->applyTransformation(rotation, translation, aabb);
+
+        rotation << 1.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 0.0, 1.0;
+
+        // transform the end of the tail
+        // aabb.setAABB(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
+        // aabb.setAABB(-0.032, 0.032, 0.757, 0.920, -0.360, -0.232); // longer end
+        aabb.setAABB(-0.016785, 0.016785, 0.900588, 0.919792, -0.358661, -0.336833);
+        translation = Vector3d(0.0, -0.80, -0.45);
+        // dgraph->applyTransformation(rotation, translation, aabb);
+
+        // transform the front paws
+        aabb.setAABB(-0.10704, 0.10704, -0.001683, 0.052816, 0.587649, 0.691307);
+        translation = Vector3d(0.0, 0.1, 0.25);
+        // dgraph->applyTransformation(rotation, translation, aabb);
+
+        // transform the rear paws
+        aabb.setAABB(-0.16731, 0.16731, -0.002068, 0.150633, -0.064655, 0.165848);
+        //aabb.setAABB(-0.16731, 0.16731, -0.002068, 0.093362, 0.015152, 0.165848);
+        translation = Vector3d(0.0, 0.00, -0.25);
+        // dgraph->applyTransformation(rotation, translation, aabb);
+
+        // transform the left leg
+        // aabb.setAABB(-0.1678, 0.171623, -0.002068, 0.919792, -0.358661, 0.973195);
+        // translation = Vector3d(0.0, 0.3, 0.3);
+        // dgraph->applyTransformation(rotation, translation, aabb);
+
+        // aabb.setAABB(-0.16731, 0.126305, -0.001683, 0.304127, 0.10341, 0.691942);
+        // dgraph->applyTransformation(rotation, translation, aabb);
+
+        // translation = glm::vec3(0.0f, 0.0f, 0.0f);
+
+        // dgraph->applyTransformation(rotation, translation, aabb);
+    }
 
     dgraph->optimize();
 
@@ -544,9 +610,4 @@ void doDeformation()
     // Try to deform another model directly
     Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
     deformModel->setMeshVertices(0, dgraph->returnVertices());
-
-    // Load deform model
-    // ResourceManager::LoadVertices(_MODEL_PREFIX_"/deform/" + modelName +".obj", "deform");
-
 }
-

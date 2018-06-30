@@ -10,6 +10,7 @@
 #include "texture.h"
 #include "shader.h"
 #include "model.h"
+#include "graph/boundingObject.h"
 #ifdef __APPLE__
 #define _SHADER_PREFIX_ "../shaders"
 #define _TEXTURE_PREFIX_ "../textures"
@@ -76,6 +77,8 @@ public:
 
     // Retrieves a stored sample.
     static Sample * GetSample(const string& name);
+
+    static AABB GetAABB(const string &objModelFile);
 
 private:
     // Private constructor, that is we do not want any actual resource manager objects. Its members and functions should be publicly available (static).

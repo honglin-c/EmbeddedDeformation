@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <limits>
 #include "stb_image.h"
 #include "mesh.h"
 
@@ -316,3 +317,53 @@ void ResourceManager::LoadVertices(string objModelFile, string name)
     }    
 }
 
+AABB ResourceManager::GetAABB(const string &objModelFile)
+{
+    AABB aabb;
+    aabb.setAABB(0, 0, 0, 0, 0, 0);
+    std::ifstream fin;
+    float x, y, z;
+    string line_header;
+    char tmp;
+    float xmin, xmax, ymin, ymax, zmin, zmax;
+    xmin = ymin = zmin = std::numeric_limits<float>::max();
+    xmax = ymax = zmax = std::numeric_limits<float>::min();
+    try
+    {
+        fin.exceptions(std::ifstream::badbit);
+        std::cout << "AABB: open " << objModelFile << std::endl;
+        fin.open(objModelFile);
+
+        int header_count = 0;
+        do
+        {
+            fin >> line_header;
+            if(line_header == "####") header_count++;
+            std::cout << line_header << std::endl;
+        }while(header_count < 3);
+
+        fin >> tmp >> x >> y >> z;
+        while(tmp == 'v')
+        {
+            if (x == 0.0 && y == 0.0 && z == 0.0) continue;
+            if(x < xmin) xmin = x;
+            if(y < ymin) ymin = y;
+            if(z < zmin) zmin = z;
+
+            if(x > xmax) xmax = x;
+            if(y > ymax) ymax = y;
+            if(z > zmax) zmax = z;
+            fin >> tmp >> x >> y >> z;
+        }
+        std::cout << "AABB " << objModelFile << std::endl;
+        std::cout << xmin << " " << xmax << " " << ymin << " " << ymax << " " << zmin << " " << zmax << std::endl;
+        aabb.setAABB(xmin, xmax, ymin, ymax, zmin, zmax);
+
+        fin.close();
+    }
+    catch (std::exception e)
+    {
+        std::cout << "ERROR::LoadModel Failed to read AABB files::" << e.what() << std::endl;
+    }
+    return aabb;
+}

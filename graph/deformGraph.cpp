@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <ctime>
 
 using namespace std;
 
@@ -334,14 +335,18 @@ void DeformGraph::debug(std::string s)
 // Gauss-Newton : for Cholesky Decompostion, implement fill-reducing and symbolic facterization later
 void DeformGraph::optimize()
 {
+	clock_t begin, end;
+	clock_t solve_time, def_time;
 	updateOrder();
 	double Fx, Fx_old = 0.0;
   	SimplicialLDLT<SparseMd> chol;
 
 	VectorXd delta(x_order);
-	for(int i = 0; i < max_iter; i++)
+	int i;
+	for(i = 0; i < max_iter; i++)
 	{
 		debug("1");
+		begin = clock();
 		SparseMd Jf = this->getJf();
 		// std::cout << i << "-th Jf: " << std::endl;
 		// for(int j = 0; j < Jf.rows(); j++)
@@ -421,11 +426,17 @@ void DeformGraph::optimize()
 		}
 
 		debug("5");
+		end = clock();
+		solve_time += end - begin;
 		// Update the positions of all vertices using current transformation
+		begin = clock();
 		update();
-
+		end = clock();
+		def_time += end - begin;
 		debug("6");
 	}
+	double avg_solve_time = (double)solve_time / (CLOCKS_PER_SEC * i);
+	double avg_def_time = (double)def_time / (CLOCKS_PER_SEC * i);
 }
 
 void DeformGraph::updateNodesRt(VectorXd delta)
