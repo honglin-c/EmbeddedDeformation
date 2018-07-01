@@ -4,9 +4,6 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 
-# executable
-Deformation
-
 # log
 *.log
 
