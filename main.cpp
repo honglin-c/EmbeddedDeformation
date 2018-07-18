@@ -28,7 +28,7 @@
 #include "graph/node.h"
 #include "graph/boundingObject.h"
 
-#define DEBUG
+// #define DEBUG
 
 string modelName = "cat";
 
@@ -160,12 +160,8 @@ int main(int argc, char *argv[])
     // Do some initialization for our application (include loading shaders, models, etc.)
     shaderModelInit();
 
-    std::cout << "#1" << std::endl;
-
     // Initialize the deform graph
     deformGraph();
-
-    std::cout << "#2" << std::endl;
 
     doDeformation();
 
@@ -511,7 +507,7 @@ void doDeformation()
 
         // Transform the front right knee
         aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "front_right_hoof2.obj");
-        translation = Vector3d(-1.7, 0.0, 0.3);
+        translation = Vector3d(-1.7, 0.0, 0.4);
         dgraph->applyTransformation(rotation, translation, aabb);
 
         // Transform the front left knee
@@ -521,7 +517,7 @@ void doDeformation()
         
         // Transform the head
         aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "head.obj");
-        translation = Vector3d(0.0, -9.0, 6.0);
+        translation = Vector3d(0.0, -8.0, 7.0);
         dgraph->applyTransformation(rotation, translation, aabb);
     }
     else if (modelName == "cat")

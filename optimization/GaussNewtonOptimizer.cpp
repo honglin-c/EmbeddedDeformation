@@ -78,6 +78,7 @@ bool GaussNewtonOptimizer::solve(std::shared_ptr<ResidualFunction> f, std::share
 		fout << "iteration: " << i << endl;
 	}
 	fout.close();
+	
 	return stopped;
 }
 
