@@ -386,20 +386,19 @@ void display()
     {
         if (drawParticle)
         {
-            // std::cout << "sample size:" << sample->size() << std::endl;
             try
             {
                 std::vector<glm::vec3>::iterator pos;
                 for (pos = sample->begin(); pos != sample->end(); pos++)
                 {
-                    glm::vec3 position = *pos;
+                    glm::vec3 position = *pos + modelPos;
                     color.SetVector3f("givenColor", glm::vec3(1.0f, 1.0f, 1.0f));
                     // Draw the particle.
                     model = glm::mat4();
                     // Translate to the particles position.
                     model = glm::translate(model, position);
                     color.SetMatrix4("model", model);
-                    // sphere->Draw(color);
+                    sphere->Draw(color);
                 }
             }
             catch (std::exception e)
@@ -417,14 +416,14 @@ void display()
         {
             for (auto pos:deform_sample)
             {
-                glm::vec3 position = pos * 0.2f + deformPos;
-                color.SetVector3f("givenColor", glm::vec3(1.0f, 0.0f, 0.0f));
+                glm::vec3 position = pos + deformPos;
+                color.SetVector3f("givenColor", glm::vec3(0.0f, 1.0f, 0.0f));
                 // Draw the particle.
                 model = glm::mat4();
                 // Translate to the particles position.
                 model = glm::translate(model, position);
                 color.SetMatrix4("model", model);
-                // sphere->Draw(color);
+                sphere->Draw(color);
             }
         }
         catch (std::exception e)
