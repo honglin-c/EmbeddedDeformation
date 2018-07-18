@@ -49,22 +49,17 @@ Eigen::SparseMatrix<double> TargetFunction::calcJf(shared_ptr<Param> param)
 	// E_rot
 	// row range: from 0 to nodes.size() * 6 - 1
 	calcJfRot(param, tripletList);
-	debug("1.0.2");
 
 	// E_reg
 	// row range: from nodes.size() * 6 to nodes.size() * 6 + nodes.size() * neighbor(n).size()
 	calcJfReg(param, tripletList);
-	debug("1.0.3");
 
 	// E_con
 	// row range: from nodes.size() * (6 + N(nodes).size())
 	//            to nodes.size() * (6 + N(nodes).size()) + vertices.size()
 	calcJfCon(param, tripletList);
-	debug("1.0.4");
 
 	Jf.setFromTriplets(tripletList.begin(), tripletList.end());
-
-	debug("1.0.5");
 
 	return Jf;
 }
@@ -85,13 +80,9 @@ static_pointer_cast<XParam, Param>(param);
 	{
 		auto n = nodes[ci];
 
-		debug("1.0.1");
-
 		// Erot -- the first 6 rows
 		Matrix3d rotation = n->matRotation();
 		row = 6 * ci; //Erot begins at row-th row
-
-		debug("1.0.1.1");
 
 		// Ri_11 to Ri_33: iterate the first 9 columns of a node
 		for(int roti = 0; roti < 3; roti++)
@@ -103,8 +94,6 @@ static_pointer_cast<XParam, Param>(param);
 				// c1 * c2
 				if(rotj == 0 || rotj == 1)
 					tripletList.push_back(Tf(row + 0, col, std::sqrt(w_rot) * rotation(roti, 1 - rotj)));
-
-				debug("1.0.1.2");
 
 				// c1 * c3
 				if(rotj == 0 || rotj == 2)
@@ -132,9 +121,7 @@ static_pointer_cast<XParam, Param>(param);
 
 void TargetFunction::calcJfReg(shared_ptr<Param> param, vector<Tf> &tripletList)
 {
-	shared_ptr<XParam> xparam =
-
-static_pointer_cast<XParam, Param>(param);
+	shared_ptr<XParam> xparam = static_pointer_cast<XParam, Param>(param);
 
 	std::vector<GraphVertex *> vertices = xparam->vertices;
 	std::vector<Node *> nodes = xparam->nodes;
@@ -211,9 +198,7 @@ static_pointer_cast<XParam, Param>(param);
 
 void TargetFunction::calcJfCon(shared_ptr<Param> param, vector<Tf> &tripletList)
 {
-	shared_ptr<XParam> xparam =
-
-static_pointer_cast<XParam, Param>(param);
+	shared_ptr<XParam> xparam = static_pointer_cast<XParam, Param>(param);
 
 	std::vector<GraphVertex *> vertices = xparam->vertices;
 	std::vector<Node *> nodes = xparam->nodes;
@@ -275,29 +260,18 @@ Eigen::VectorXd TargetFunction::calcfx(shared_ptr<Param> param)
 {
 	VectorXd fx(fx_order);
 	int index = 0;
-
-	debug("1.1.1");
-
 	// Erot
 	calcfxRot(param, fx);
-	debug("1.1.2");
-
 	// Ereg
 	calcfxReg(param, fx);
-	debug("1.1.3");
-
 	// Econ
 	calcfxCon(param, fx);
-	debug("1.1.4");
-
 	return fx;
 }
 
 void TargetFunction::calcfxRot(shared_ptr<Param> param, VectorXd &fx)
 {
-	shared_ptr<XParam> xparam =
-
-static_pointer_cast<XParam, Param>(param);
+	shared_ptr<XParam> xparam = static_pointer_cast<XParam, Param>(param);
 
 	std::vector<Node *> nodes = xparam->nodes;
 
@@ -307,8 +281,6 @@ static_pointer_cast<XParam, Param>(param);
 	for(auto n:nodes)
 	{
 		rotTerm = n->getRotTerm();
-		// std::cout << "get Rot term: " << std::endl;
-		// std::cout << rotTerm << std::endl;
 		fx[index + 0] = std::sqrt(w_rot) * rotTerm(0);
 		fx[index + 1] = std::sqrt(w_rot) * rotTerm(1);
 		fx[index + 2] = std::sqrt(w_rot) * rotTerm(2);
@@ -321,9 +293,7 @@ static_pointer_cast<XParam, Param>(param);
 
 void TargetFunction::calcfxReg(shared_ptr<Param> param, VectorXd &fx)
 {
-	shared_ptr<XParam> xparam =
-
-static_pointer_cast<XParam, Param>(param);
+	shared_ptr<XParam> xparam = static_pointer_cast<XParam, Param>(param);
 
 	std::vector<Node *> nodes = xparam->nodes;
 
@@ -345,9 +315,7 @@ static_pointer_cast<XParam, Param>(param);
 
 void TargetFunction::calcfxCon(shared_ptr<Param> param, VectorXd &fx)
 {
-	shared_ptr<XParam> xparam =
-
-static_pointer_cast<XParam, Param>(param);
+	shared_ptr<XParam> xparam = static_pointer_cast<XParam, Param>(param);
 
 	std::vector<GraphVertex *> vertices = xparam->vertices;
 

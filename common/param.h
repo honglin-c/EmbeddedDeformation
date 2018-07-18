@@ -18,11 +18,13 @@ class XParam: public Param
 public:
 	XParam(){}
 	~XParam(){}
-	void setVerticesAndNodes(std::vector<GraphVertex *> &vertices, std::vector<Node *> &nodes)
+	void setParamInfo(const std::string &modelName, std::vector<GraphVertex *> &vertices, std::vector<Node *> &nodes)
 	{
+		this->modelName = modelName;
 		this->vertices = vertices;
 		this->nodes = nodes;
 	}
+	std::string modelName;
 	std::vector<GraphVertex *> vertices;
 	std::vector<Node *> nodes;
 };

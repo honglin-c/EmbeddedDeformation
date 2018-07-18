@@ -32,8 +32,6 @@ private:
 	const int 	 max_iter = 20;
 	const double epsilon = 1e-6;
 	const int 	 x_rt = 12;
-	// int reg_begin;
-	// int con_begin;
 
 	void updateParam(std::shared_ptr<Param> param, Eigen::VectorXd delta);
 
@@ -42,6 +40,7 @@ private:
 							  		 SimplicialLDLT<Eigen::SparseMatrix<double>> &chol, 
 							 		 bool symbolic);
 	void debug(const std::string s);
+	int constraint_count; // use to measure benchmark
 };
 
 #endif

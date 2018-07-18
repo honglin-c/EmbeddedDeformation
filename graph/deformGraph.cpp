@@ -221,7 +221,7 @@ void DeformGraph::optimize()
 	std::cout << "start optimization " << std::endl;	
 	GaussNewtonSolver * optimizer = new GaussNewtonOptimizer();	
 	shared_ptr<XParam> xparam(new XParam);
-	xparam->setVerticesAndNodes(vertices, nodes);
+	xparam->setParamInfo(modelName, vertices, nodes);
 	shared_ptr<TargetFunction> targetFunc(new TargetFunction(xparam));
 	std::cout << "start solver " << std::endl;	
 	optimizer->solve(targetFunc, xparam);
