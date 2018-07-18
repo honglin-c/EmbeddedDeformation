@@ -39,6 +39,23 @@ void Node::addDeltaRotation(Matrix3d delta)
 	rotation += delta;
 	Matrix3d after = this->matRotation();
 	Matrix3d ata = after.transpose() * after;
+	// if(ata != Eigen::MatrixXd::Identity(3, 3))
+	// {
+	// 	std::cout << "before: " << std::endl;
+	// 	std::cout << before << std::endl;
+	// 	std::cout << "after: " << std::endl;
+	// 	std::cout << after << std::endl;
+	// 	std::cout << "A^T * A: " << std::endl;
+	// 	std::cout << ata << std::endl;
+	// 	// for(int i = 0; i < ata.rows(); i++)
+	// 	// {
+	// 	// 	for(int j = 0; j < ata.cols(); j++)
+	// 	// 	{
+	// 	// 		if(i != j && ata(i, j) > 1e-4)
+	// 	// 			assert(0);
+	// 	// 	}
+	// 	// }
+	// }
 }
 
 void Node::addDeltaTranslation(Vector3d delta)
@@ -57,6 +74,8 @@ void Node::setTransformation(Matrix3d &_rotation, Vector3d &_translation)
 	rotation = _rotation;
 	translation = _translation;
 	transformed = true;
+	// Matrix3d rot = this->matRotation();
+	// assert(rot.transpose() * rot == MatrixXd::Identity(3, 3));
 }
 
 

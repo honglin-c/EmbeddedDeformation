@@ -46,6 +46,7 @@ public:
 
 	// Optimized by Gauss-Newton method
 	void optimize();
+	void optimize(int tmp);
 
 	vector<Vertex> returnVertices();
 

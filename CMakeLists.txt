@@ -7,6 +7,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -g")
 include_directories(${PROJECT_SOURCE_DIR})
 set(SOURCE_FILES camera.h camera.cpp main.cpp mesh.h mesh.cpp model.h model.cpp resource_manager.h resource_manager.cpp shader.h shader.cpp texture.h stb_image.cpp stb_image.h texture.cpp)
 aux_source_directory(graph SOURCE_FILES)
+aux_source_directory(common SOURCE_FILES)
+aux_source_directory(optimization SOURCE_FILES)
 add_executable(Deformation ${SOURCE_FILES})
 
 if (APPLE)

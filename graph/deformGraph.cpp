@@ -1,9 +1,12 @@
 #include "deformGraph.h"
 #include "distCompare.h"
+#include "../optimization/GaussNewtonOptimizer.h"
+#include "../optimization/targetFunction.h"
 #include <limits>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <memory>
 #include <ctime>
 
 using namespace std;
@@ -213,8 +216,22 @@ void DeformGraph::debug(std::string s)
 	std::cout << s << std::endl;
 }
 
-// Gauss-Newton : for Cholesky Decompostion, implement fill-reducing and symbolic facterization later
 void DeformGraph::optimize()
+{
+	std::cout << "start optimization " << std::endl;	
+	GaussNewtonSolver * optimizer = new GaussNewtonOptimizer();	
+	shared_ptr<XParam> xparam(new XParam);
+	xparam->setVerticesAndNodes(vertices, nodes);
+	shared_ptr<TargetFunction> targetFunc(new TargetFunction(xparam));
+	std::cout << "start solver " << std::endl;	
+	optimizer->solve(targetFunc, xparam);
+	std::cout << "finish optimization " << std::endl;
+	delete optimizer;
+}
+
+// Deprecated
+// Gauss-Newton : for Cholesky Decompostion, implement fill-reducing and symbolic facterization later
+void DeformGraph::optimize(int tmp)
 {
 	ofstream fout("benchmark/" + modelName + "_measure_time.txt");
 	clock_t begin, end;
