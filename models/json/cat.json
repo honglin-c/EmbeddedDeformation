@@ -1,0 +1,21 @@
+{
+	"pin": {
+		"body": {
+			"obj": "body.obj"
+		}
+	},
+	"deform": {
+		"tail": {
+			"obj": "tail.obj",
+			"translation": [0.0,-0.8,-0.45]
+		},
+		"front_paws": {
+			"obj": "front_paws.obj",
+			"translation": [0.0, 0.1, 0.25]
+		},
+		"rear_paws": {
+			"obj": "rear_paws.obj",
+			"translation": [0.0, 0.0, -0.25]
+		}
+	}
+}

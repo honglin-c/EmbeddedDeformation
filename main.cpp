@@ -21,6 +21,10 @@
 #include "model.h"
 #include "shader.h"
 #include "resource_manager.h"
+// JSON Reader
+#include "rapidjson/document.h"
+#include "rapidjson/filereadstream.h"
+#include <cstdio>
 
 // Deformation Graph
 #include "graph/deformGraph.h"
@@ -29,6 +33,8 @@
 #include "graph/boundingObject.h"
 
 // #define DEBUG
+
+using namespace rapidjson;
 
 string modelName = "cat";
 
@@ -359,7 +365,7 @@ void display()
     Model *originalModel = ResourceManager::GetModel(modelName);
     originalModel->Draw(phong);
 
-#ifdef DEBUG    
+#ifdef DEBUG
 
     Shader color = ResourceManager::GetShader("color");
     color.Use();
@@ -469,6 +475,86 @@ void deformGraph()
     dgraph = new DeformGraph(modelName, gvertices, gnodes);
 }
 
+Document readJSON()
+{
+    string jsonPath = _MODEL_PREFIX_"/json/" + modelName + ".json";
+    FILE* fp = fopen(jsonPath.c_str(), "r"); // non-Windows use "r"
+    assert(fp != NULL);
+    char readBuffer[65536];
+    FileReadStream is(fp, readBuffer, sizeof(readBuffer));
+    Document d;
+    d.ParseStream(is);
+    fclose(fp);
+    return d;
+}
+
+void doDeformation(int temp)
+{
+    AABB aabb;    
+    Matrix3d rotation;
+    Vector3d translation(0.0, 0.0, 0.0);
+    rotation << 1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0;
+
+    // Parse JSON
+    Document d = readJSON();
+    assert(d.IsObject());
+    // Pin
+    if(d.HasMember("pin"))
+    {
+        for(Value::ConstMemberIterator it = d["pin"].MemberBegin(); it != d["pin"].MemberEnd(); it++)
+        {
+            assert(it->value.HasMember("obj"));
+            string objName =  it->value["obj"].GetString();
+            string objPath = _MODEL_PREFIX_"/"+ modelName +"/"+ objName;
+            std::cout << "Pin: " << objPath << endl;
+            aabb = ResourceManager::GetAABB(objPath.c_str());
+            dgraph->addFixedConstraint(aabb);
+        }
+    }
+    // Transform
+    if(d.HasMember("deform"))
+    {
+        for(Value::ConstMemberIterator it = d["deform"].MemberBegin(); it != d["deform"].MemberEnd(); it++)
+
+        {
+            translation = Vector3d(0.0, 0.0, 0.0);
+            rotation << 1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0;
+            assert(it->value.HasMember("obj"));
+            string objName = it->value["obj"].GetString();
+            string objPath = _MODEL_PREFIX_"/"+ modelName +"/"+ objName;
+            std::cout << "Deform: " << objPath << endl;
+            aabb = ResourceManager::GetAABB(objPath.c_str());
+            if(it->value.HasMember("translation"))
+            {
+                assert(it->value["translation"].IsArray());
+                const Value& tl = it->value["translation"];
+                assert(tl.IsArray() && tl.Size() == 3);
+                translation = Vector3d(tl[0].GetFloat(), tl[1].GetFloat(), tl[2].GetFloat());
+            }
+            if(it->value.HasMember("rotation"))
+            {
+                assert(it->value["rotation"].IsArray());
+                const Value& rot = it->value["rotation"];
+                assert(rot.IsArray() && rot.Size() == 9);
+                rotation << rot[0].GetFloat(), rot[1].GetFloat(), rot[2].GetFloat(),
+                            rot[3].GetFloat(), rot[4].GetFloat(), rot[5].GetFloat(),
+                            rot[6].GetFloat(), rot[7].GetFloat(), rot[8].GetFloat();
+            }
+            dgraph->applyTransformation(rotation, translation, aabb);
+        }
+    }
+
+    dgraph->optimize();
+
+    // Try to deform another model directly
+    Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
+    deformModel->setMeshVertices(0, dgraph->returnVertices());
+}
+
 void doDeformation()
 {
     AABB aabb;
@@ -505,16 +591,16 @@ void doDeformation()
                     0.0, 1.0, 0.0,
                     0.0, 0.0, 1.0;
 
-        // Transform the front right knee
-        aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "front_right_hoof2.obj");
-        translation = Vector3d(-1.7, 0.0, 0.4);
-        dgraph->applyTransformation(rotation, translation, aabb);
+        // // Transform the front right knee
+        // aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "front_right_knee.obj");
+        // translation = Vector3d(-1.5, 0.0, 0.4);
+        // dgraph->applyTransformation(rotation, translation, aabb);
 
-        // Transform the front left knee
-        aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "front_left_hoof.obj");
-        translation = Vector3d(1.7, 0.0, 0.4);
-        dgraph->applyTransformation(rotation, translation, aabb);
-        
+        // // Transform the front left knee
+        // aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "front_left_knee.obj");
+        // translation = Vector3d(1.5, 0.0, 0.4);
+        // dgraph->applyTransformation(rotation, translation, aabb);
+
         // Transform the head
         aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "head.obj");
         translation = Vector3d(0.0, -8.0, 7.0);

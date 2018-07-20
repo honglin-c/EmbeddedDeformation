@@ -1,0 +1,21 @@
+{
+	"pin": {
+		"body": {
+			"obj": "body.obj"
+		}
+	},
+	"deform": {
+		"front_right_hoof": {
+			"obj": "front_right_hoof.obj",
+			"translation": [-2.5, 0.0, 0.8]
+		},
+		"front_left_hoof": {
+			"obj": "front_left_hoof2.obj",
+			"translation": [2.5, 0.0, 0.8]
+		},
+		"head": {
+			"obj": "head.obj",
+			"translation": [0.0, -8.0, 7.0]
+		}
+	}
+}
