@@ -14,11 +14,11 @@ bool GaussNewtonOptimizer::solve(std::shared_ptr<ResidualFunction> f, std::share
 {
 	bool stopped = false;
 	// Initialize
-	shared_ptr<XParam> xparam = static_pointer_cast<XParam, Param>(param);
+	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
 	std::string modelName = xparam->modelName;
 	std::vector<GraphVertex *> vertices = xparam->vertices;
 	std::vector<Node *> nodes = xparam->nodes;
-	shared_ptr<TargetFunction> tf = static_pointer_cast<TargetFunction, ResidualFunction>(f);
+	shared_ptr<DeformTargetFunction> tf = static_pointer_cast<DeformTargetFunction, ResidualFunction>(f);
 	double Fx = 0.0, Fx_old = 0.0;
   	SimplicialLDLT<SparseMatrix<double>> chol;
 
@@ -84,7 +84,7 @@ bool GaussNewtonOptimizer::solve(std::shared_ptr<ResidualFunction> f, std::share
 
 void GaussNewtonOptimizer::updateParam(std::shared_ptr<Param> param, Eigen::VectorXd delta)
 {
-	shared_ptr<XParam> xparam = static_pointer_cast<XParam, Param>(param);
+	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
 
 	std::vector<GraphVertex *> vertices = xparam->vertices;
 	std::vector<Node *> nodes = xparam->nodes;

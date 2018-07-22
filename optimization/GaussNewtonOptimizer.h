@@ -6,7 +6,7 @@
 #include "../common/GaussNewtonSolver.h"
 #include "../graph/graphVertex.h"
 #include "../graph/node.h"
-#include "targetFunction.h"
+#include "../graph/deformTargetFunction.h"
 
 #include <memory>
 #include <iostream>

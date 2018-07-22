@@ -1,7 +1,7 @@
 #include "deformGraph.h"
 #include "distCompare.h"
 #include "../optimization/GaussNewtonOptimizer.h"
-#include "../optimization/targetFunction.h"
+#include "deformTargetFunction.h"
 #include <limits>
 #include <iostream>
 #include <fstream>
@@ -177,9 +177,9 @@ void DeformGraph::optimize()
 {
 	std::cout << "start optimization " << std::endl;	
 	GaussNewtonSolver * optimizer = new GaussNewtonOptimizer();	
-	shared_ptr<XParam> xparam(new XParam);
+	shared_ptr<DeformParam> xparam(new DeformParam);
 	xparam->setParamInfo(modelName, vertices, nodes);
-	shared_ptr<TargetFunction> targetFunc(new TargetFunction(xparam));
+	shared_ptr<DeformTargetFunction> targetFunc(new DeformTargetFunction(xparam));
 	std::cout << "start solver " << std::endl;	
 	optimizer->solve(targetFunc, xparam);
 	std::cout << "finish optimization " << std::endl;
