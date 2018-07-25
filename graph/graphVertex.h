@@ -37,8 +37,6 @@ public:
 	// Get vertex's [ture position - user-specific position]
 	Vector3d getConTerm();
 
-
-
 //private:
 	Vector3d position_init; // initial position and vertex
 	Vector3d normal_init;

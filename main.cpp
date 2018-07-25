@@ -32,10 +32,17 @@
 #include "graph/node.h"
 #include "graph/boundingObject.h"
 
+// Create delay
+#include <chrono>
+#include <thread>
+
 // #define DEBUG
-
+using namespace std;
 using namespace rapidjson;
+using namespace std::this_thread; // sleep_for, sleep_until
+using namespace std::chrono; // nanoseconds, system_clock, seconds
 
+bool animation = true;
 string modelName = "cat";
 
 // Function prototypes.
@@ -55,13 +62,16 @@ void doMovement();
 void display();
 
 // Simulate.
-void simulate();
+bool simulate(int &step, const int max_iter);
 
 // Deform the graph
 void deformGraph();
 
 // Deform the model
 void doDeformation();
+
+// Optimize
+void optimize();
 
 bool parse(int argc, char * argv[]);
 
@@ -162,45 +172,60 @@ int main(int argc, char *argv[])
 
     // Input Options.
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // Do some initialization for our application (include loading shaders, models, etc.)
-    shaderModelInit();
-
-    // Initialize the deform graph
-    deformGraph();
-
-    doDeformation();
-
-    // Loop.
-    while (!glfwWindowShouldClose(window))
+    while(!glfwWindowShouldClose(window))
     {
-        // Calculate delta time of current frame.
-        GLfloat currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        // Do some initialization for our application (include loading shaders, models, etc.)
+        shaderModelInit();
 
-        // Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions.
-        glfwPollEvents();
-        doMovement();
+        // Initialize the deform graph
+        deformGraph();
 
-        // Clear the color buffer.
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        doDeformation();
 
-        // Draw scene, create transformations.
-        display();
+        if(!animation) optimize();
+        
+        cout << "Start Optimization" << endl;
 
-        // Simulate.
-        simulate();
+        int step = 0, max_iter = 16;
+        bool stopped = false;
 
-        // Swap the buffers.
-        glfwSwapBuffers(window);
+        // Loop.
+        while (!glfwWindowShouldClose(window))
+        {
+            // Calculate delta time of current frame.
+            GLfloat currentFrame = glfwGetTime();
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
+
+            // Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions.
+            glfwPollEvents();
+            doMovement();
+
+            // Clear the color buffer.
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            // Draw scene, create transformations.
+            display();
+
+            // Simulate.
+            if(animation) 
+                stopped = simulate(step, max_iter);
+
+            // Swap the buffers.
+            glfwSwapBuffers(window);
+
+            if(step == max_iter || stopped)
+            {
+                sleep_for(nanoseconds(1000));
+                break;
+            }
+        }
+        delete dgraph;
     }
 
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
-
-    delete dgraph;
 
     return 0;
 }
@@ -214,11 +239,23 @@ bool parse(int argc, char * argv[])
             modelName = "cat";
         else if (strcmp(argv[1], "-giraffe") == 0)
             modelName = "giraffe";
+        else if (strcmp(argv[1], "-dcat") == 0)
+        {
+            modelName = "cat";
+            animation = false;
+        }
+        else if (strcmp(argv[1], "-dgiraffe") == 0)
+        {
+            modelName = "giraffe";
+            animation = false;           
+        }
         else if (strcmp(argv[1], "--help") == 0)
         {
             cout << "option: " << endl;
-            cout << "-cat: display original cat and deformed cat model" << endl;
-            cout << "-giraffe: display original giraffe and deformed giraffe model" << endl;
+            cout << "-cat: display original cat and cat model animation" << endl;
+            cout << "-giraffe: display original giraffe and giraffe model animation" << endl;
+            cout << "-dcat: display original cat and deformed cat model" << endl;
+            cout << "-dgiraffe: display original giraffe and deformed giraffe model" << endl;
             return false;
         }
         else
@@ -350,16 +387,16 @@ void display()
     if(modelName == "giraffe")
     {
         phong_scaling = glm::mat4(0.1f, 0.0f,  0.0f,  0.0f,
-                                0.0f,  0.1f, 0.0f,  0.0f,
-                                0.0f,  0.0f,  0.1f, 0.0f,
-                                0.0f,  0.0f,  0.0f,  1.0f);
+                                  0.0f,  0.1f, 0.0f,  0.0f,
+                                  0.0f,  0.0f,  0.1f, 0.0f,
+                                  0.0f,  0.0f,  0.0f,  1.0f);
     }
     else
     {
         phong_scaling = glm::mat4(1.0f,  0.0f,  0.0f,  0.0f,
-                                0.0f,  1.0f,  0.0f,  0.0f,
-                                0.0f,  0.0f,  1.0f,  0.0f,
-                                0.0f,  0.0f,  0.0f,  1.0f);
+                                  0.0f,  1.0f,  0.0f,  0.0f,
+                                  0.0f,  0.0f,  1.0f,  0.0f,
+                                  0.0f,  0.0f,  0.0f,  1.0f);
     }
     phong.SetMatrix4("scaling", phong_scaling);
     Model *originalModel = ResourceManager::GetModel(modelName);
@@ -451,8 +488,21 @@ void display()
 
 }
 
-void simulate()
+// Perform a single step in the  gradual deformation process
+bool simulate(int &step, const int max_iter)
 {
+    if(step >= max_iter)
+        return false;
+    else 
+        step++;
+
+    bool stopped = dgraph->optimizeSingleStep();
+
+    // Try to deform another model directly
+    Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
+    deformModel->setMeshVertices(0, dgraph->returnVertices());
+
+    return stopped;
 }
 
 void deformGraph()
@@ -547,14 +597,9 @@ void doDeformation(int temp)
             dgraph->applyTransformation(rotation, translation, aabb);
         }
     }
-
-    dgraph->optimize();
-
-    // Try to deform another model directly
-    Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
-    deformModel->setMeshVertices(0, dgraph->returnVertices());
 }
 
+// Deprecated
 void doDeformation()
 {
     AABB aabb;
@@ -603,7 +648,7 @@ void doDeformation()
 
         // Transform the head
         aabb = ResourceManager::GetAABB(_MODEL_PREFIX_"/"+ modelName +"/"+ "head.obj");
-        translation = Vector3d(0.0, -8.0, 7.0);
+        translation = Vector3d(0.0, -8.0, 5.0);
         dgraph->applyTransformation(rotation, translation, aabb);
     }
     else if (modelName == "cat")
@@ -653,9 +698,14 @@ void doDeformation()
         dgraph->applyTransformation(rotation, translation, aabb);
     }
 
+}
+
+void optimize()
+{
     dgraph->optimize();
 
     // Try to deform another model directly
     Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
     deformModel->setMeshVertices(0, dgraph->returnVertices());
+
 }

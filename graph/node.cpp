@@ -4,18 +4,28 @@
 Node::Node():transformed(false)
 {
 	rotation = Matrix3d::Identity();
-	translation = Vector3d(0.0, 0.0, 0.0);
+	velocity = translation = Vector3d(0.0, 0.0, 0.0);
 }
 
 Node::Node(glm::vec3 _position):position(Vector3d(_position[0], _position[1], _position[2])),
 								transformed(false)
 {
 	rotation = Matrix3d::Identity();
-	translation = Vector3d(0.0, 0.0, 0.0);
+	velocity = translation = Vector3d(0.0, 0.0, 0.0);
 }
 
 Node::~Node()
 {}
+
+Vector3d Node::getVelocity() const
+{
+	return velocity;
+}
+
+void Node::setVelocity(Vector3d velocity)
+{
+	this->velocity = velocity;
+}
 
 Vector3d Node::getPosition() const
 {
@@ -28,18 +38,18 @@ Vector3d Node::getTranslation() const
 }
 
 
-void Node::addDeltaRotation(Matrix3d delta)
+void Node::addDeltaRotation(Matrix3d &delta)
 {
 	rotation += delta;
 }
 
-void Node::addDeltaTranslation(Vector3d delta)
+void Node::addDeltaTranslation(Vector3d &delta)
 {
 	translation += delta;
 }
 
 
-Vector3d Node::applyMapping(Vector3d p)
+Vector3d Node::applyMapping(Vector3d &p)
 {
 	return rotation * (p - position) + position + translation;
 }
@@ -57,12 +67,12 @@ void print(const Vector3d &v)
     std::cout << v << std::endl;
 }
 
-Vector3d Node::transformPosition(Vector3d vpos)
+Vector3d Node::transformPosition(Vector3d &vpos)
 {
 	return (rotation * (vpos - position) + position + translation);
 }
 
-Vector3d Node::transformNormal(Vector3d normal)
+Vector3d Node::transformNormal(Vector3d &normal)
 {
 	return rotation.inverse() * normal;
 }

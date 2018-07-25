@@ -22,9 +22,13 @@ public:
 
     ~Node();
 
-    void addDeltaRotation(Matrix3d delta);
+    void addDeltaRotation(Matrix3d &delta);
 
-    void addDeltaTranslation(Vector3d delta);
+    void addDeltaTranslation(Vector3d &delta);
+
+    Vector3d getVelocity() const;
+
+    void setVelocity(Vector3d velocity);
 
     // void setPosition(Vector3d _position);
 
@@ -34,13 +38,13 @@ public:
 
     Vector3d getTranslation() const;
 
-    Vector3d applyMapping(Vector3d p);
+    Vector3d applyMapping(Vector3d &p);
 
     void setTransformation(Matrix3d &_rotation, Vector3d &_translation);
 
-    Vector3d transformPosition(Vector3d vpos);
+    Vector3d transformPosition(Vector3d &vpos);
 
-    Vector3d transformNormal(Vector3d normal);
+    Vector3d transformNormal(Vector3d &normal);
 
     void addNeighbor(Node * n);
 
@@ -67,7 +71,7 @@ private:
 	Matrix3d rotation;
 	Vector3d translation;
 	std::set<Node *> neighbors; // Neighbor nodes
-
+    Vector3d velocity; // used for animation
 };
 
 #endif

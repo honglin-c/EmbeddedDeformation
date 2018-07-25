@@ -21,12 +21,10 @@ void DeformTargetFunction::setOrder(shared_ptr<Param> param)
 
 	x_order = 12 * nodes.size();
 	fx_order = 6 * nodes.size();
-	std::cout << "Erot end pos: " << fx_order << std::endl;
 
 	reg_begin = fx_order;
 	for(auto n:nodes)
 		fx_order += 3 * n->getNeighbors().size();
-	std::cout << "Ereg end pos: " << fx_order << std::endl;
 
 	con_begin = fx_order;
 	for(auto v:vertices)
@@ -34,9 +32,6 @@ void DeformTargetFunction::setOrder(shared_ptr<Param> param)
 		if(v->isFixed || v->isHandled)
 			fx_order += 3;
 	}
-	std::cout << "Econ end pos: " << fx_order << std::endl;
-
-	std::cout << "x_order:" << x_order << " fx_order:" << fx_order << std::endl;
 }
 
 Eigen::SparseMatrix<double> DeformTargetFunction::calcJf(shared_ptr<Param> param)
@@ -66,9 +61,7 @@ Eigen::SparseMatrix<double> DeformTargetFunction::calcJf(shared_ptr<Param> param
 
 void DeformTargetFunction::calcJfRot(shared_ptr<Param> param, vector<Tf> &tripletList)
 {
-	shared_ptr<DeformParam> xparam =
-
-static_pointer_cast<DeformParam, Param>(param);
+	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
 
 	std::vector<GraphVertex *> vertices = xparam->vertices;
 	std::vector<Node *> nodes = xparam->nodes;

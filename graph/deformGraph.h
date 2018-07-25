@@ -40,6 +40,8 @@ public:
 	void addFixedConstraint(AABB &aabb);
 	// Optimized by Gauss-Newton method
 	void optimize();
+	// Optimized by a single step in Gauss-Newton method
+	bool optimizeSingleStep();
 
 	vector<Vertex> returnVertices();
 

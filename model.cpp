@@ -254,16 +254,12 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type,
 
 vector<Vertex> Model::returnMeshVertices(int mesh_i)
 {
-    cout << "directory: " << directory << endl;
-    cout << "mesh_i: " << mesh_i << " mesh size: " << this->meshes.size() << endl;
     assert(mesh_i >= 0 && mesh_i < this->meshes.size());
     return this->meshes[mesh_i].vertices;
 }
 
 void Model::setMeshVertices(int mesh_i, vector<Vertex> vertices)
 {
-    cout << "directory: " << directory << endl;
-    cout << "mesh_i: " << mesh_i << " mesh size: " << this->meshes.size() << endl;
     assert(mesh_i >= 0 && mesh_i < this->meshes.size());
     this->meshes[mesh_i].vertices = vertices;
     this->meshes[mesh_i].updateMesh();

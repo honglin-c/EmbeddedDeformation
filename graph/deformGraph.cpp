@@ -2,6 +2,7 @@
 #include "distCompare.h"
 #include "../optimization/GaussNewtonOptimizer.h"
 #include "deformTargetFunction.h"
+#include "../animation/animateTargetFunction.h"
 #include <limits>
 #include <iostream>
 #include <fstream>
@@ -12,7 +13,8 @@
 using namespace std;
 
 DeformGraph::DeformGraph(std::string &name,
-						 vector<GraphVertex *> &vertices,
+						 vector<GraphVertex *> 
+						 &vertices,
 						 vector<Node *> &nodes):
 						modelName(name),
 						vertices(vertices),
@@ -175,13 +177,21 @@ void DeformGraph::addFixedConstraint(AABB &aabb)
 
 void DeformGraph::optimize()
 {
-	std::cout << "start optimization " << std::endl;	
-	GaussNewtonSolver * optimizer = new GaussNewtonOptimizer();	
 	shared_ptr<DeformParam> xparam(new DeformParam);
 	xparam->setParamInfo(modelName, vertices, nodes);
 	shared_ptr<DeformTargetFunction> targetFunc(new DeformTargetFunction(xparam));
-	std::cout << "start solver " << std::endl;	
+	GaussNewtonSolver * optimizer = new GaussNewtonOptimizer(xparam);	
 	optimizer->solve(targetFunc, xparam);
-	std::cout << "finish optimization " << std::endl;
 	delete optimizer;
+}
+
+bool DeformGraph::optimizeSingleStep()
+{
+	shared_ptr<DeformParam> xparam(new DeformParam);
+	xparam->setParamInfo(modelName, vertices, nodes);
+	shared_ptr<AnimateTargetFunction> targetFunc(new AnimateTargetFunction(xparam));
+	GaussNewtonOptimizer * optimizer = new GaussNewtonOptimizer(xparam);	
+	bool stopped = optimizer->solveSingleStep(targetFunc, xparam);
+	delete optimizer;
+	return stopped;
 }

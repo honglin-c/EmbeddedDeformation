@@ -9,6 +9,7 @@ set(SOURCE_FILES camera.h camera.cpp main.cpp mesh.h mesh.cpp model.h model.cpp 
 aux_source_directory(graph SOURCE_FILES)
 aux_source_directory(common SOURCE_FILES)
 aux_source_directory(optimization SOURCE_FILES)
+aux_source_directory(animation SOURCE_FILES)
 add_executable(ExampleMaterial ${SOURCE_FILES})
 
 if (APPLE)

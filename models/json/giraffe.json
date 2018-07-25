@@ -15,7 +15,7 @@
 		},
 		"head": {
 			"obj": "head.obj",
-			"translation": [0.0, -8.0, 7.0]
+			"translation": [0.0, -8.0, 5.0]
 		}
 	}
 }
