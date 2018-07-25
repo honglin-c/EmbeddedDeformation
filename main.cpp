@@ -22,9 +22,7 @@
 #include "shader.h"
 #include "resource_manager.h"
 // JSON Reader
-#include "rapidjson/document.h"
-#include "rapidjson/filereadstream.h"
-#include <cstdio>
+#include "common/JSONReader.h"
 
 // Deformation Graph
 #include "graph/deformGraph.h"
@@ -68,7 +66,8 @@ bool simulate(int &step, const int max_iter);
 void deformGraph();
 
 // Deform the model
-void doDeformation();
+bool doDeformation();
+bool doDeformation(int temp);
 
 // Optimize
 void optimize();
@@ -180,9 +179,13 @@ int main(int argc, char *argv[])
         // Initialize the deform graph
         deformGraph();
 
-        doDeformation();
+        bool deformed;
+        if(modelName == "cat")
+            deformed = doDeformation(1); // We have not created obj file of each body part of model "cat" yet.
+        else
+            deformed = doDeformation();
 
-        if(!animation) optimize();
+        if(!animation && deformed) optimize();
         
         cout << "Start Optimization" << endl;
 
@@ -239,6 +242,8 @@ bool parse(int argc, char * argv[])
             modelName = "cat";
         else if (strcmp(argv[1], "-giraffe") == 0)
             modelName = "giraffe";
+        else if (strcmp(argv[1], "-wand") == 0)
+            modelName = "wand";
         else if (strcmp(argv[1], "-dcat") == 0)
         {
             modelName = "cat";
@@ -247,6 +252,11 @@ bool parse(int argc, char * argv[])
         else if (strcmp(argv[1], "-dgiraffe") == 0)
         {
             modelName = "giraffe";
+            animation = false;           
+        }
+        else if (strcmp(argv[1], "-dwand") == 0)
+        {
+            modelName = "wand";
             animation = false;           
         }
         else if (strcmp(argv[1], "--help") == 0)
@@ -391,6 +401,13 @@ void display()
                                   0.0f,  0.0f,  0.1f, 0.0f,
                                   0.0f,  0.0f,  0.0f,  1.0f);
     }
+    else if (modelName == "wand")
+    {
+        phong_scaling = glm::mat4(0.1f, 0.0f,  0.0f,  0.0f,
+                                  0.0f,  0.1f, 0.0f,  0.0f,
+                                  0.0f,  0.0f,  0.1f, 0.0f,
+                                  0.0f,  0.0f,  0.0f,  1.0f);
+    }
     else
     {
         phong_scaling = glm::mat4(1.0f,  0.0f,  0.0f,  0.0f,
@@ -525,20 +542,20 @@ void deformGraph()
     dgraph = new DeformGraph(modelName, gvertices, gnodes);
 }
 
-Document readJSON()
-{
-    string jsonPath = _MODEL_PREFIX_"/json/" + modelName + ".json";
-    FILE* fp = fopen(jsonPath.c_str(), "r"); // non-Windows use "r"
-    assert(fp != NULL);
-    char readBuffer[65536];
-    FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-    Document d;
-    d.ParseStream(is);
-    fclose(fp);
-    return d;
-}
+// Document readJSON(const string& filepath)
+// {
+//     string jsonPath = _MODEL_PREFIX_"/json/" + modelName + ".json";
+//     FILE* fp = fopen(jsonPath.c_str(), "r"); // non-Windows use "r"
+//     assert(fp != NULL);
+//     char readBuffer[65536];
+//     FileReadStream is(fp, readBuffer, sizeof(readBuffer));
+//     Document d;
+//     d.ParseStream(is);
+//     fclose(fp);
+//     return d;
+// }
 
-void doDeformation(int temp)
+bool doDeformation()
 {
     AABB aabb;    
     Matrix3d rotation;
@@ -546,9 +563,9 @@ void doDeformation(int temp)
     rotation << 1.0, 0.0, 0.0,
                 0.0, 1.0, 0.0,
                 0.0, 0.0, 1.0;
-
+    bool deformed = false;
     // Parse JSON
-    Document d = readJSON();
+    Document d = JSONReader::readJSON(_MODEL_PREFIX_"/json/" + modelName + ".json");
     assert(d.IsObject());
     // Pin
     if(d.HasMember("pin"))
@@ -566,6 +583,7 @@ void doDeformation(int temp)
     // Transform
     if(d.HasMember("deform"))
     {
+        deformed = true;
         for(Value::ConstMemberIterator it = d["deform"].MemberBegin(); it != d["deform"].MemberEnd(); it++)
 
         {
@@ -597,10 +615,11 @@ void doDeformation(int temp)
             dgraph->applyTransformation(rotation, translation, aabb);
         }
     }
+    return deformed;
 }
 
 // Deprecated
-void doDeformation()
+bool doDeformation(int temp)
 {
     AABB aabb;
     Matrix3d rotation;
@@ -697,7 +716,7 @@ void doDeformation()
         translation = Vector3d(0.0, 0.00, -0.25);
         dgraph->applyTransformation(rotation, translation, aabb);
     }
-
+    return true;
 }
 
 void optimize()

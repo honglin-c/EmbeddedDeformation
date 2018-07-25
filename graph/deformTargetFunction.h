@@ -23,18 +23,24 @@ public:
 	Eigen::SparseMatrix<double> calcJf(std::shared_ptr<Param> param);
 	Eigen::VectorXd 			calcfx(std::shared_ptr<Param> param);
 
+	double						calcFx(std::shared_ptr<Param> param);
+	Eigen::VectorXd             calcJF(std::shared_ptr<Param> param);
+
 	int reg_begin;
 	int con_begin;
 protected:
 	const int 	 k = 4;
 	const double sqrt10 = 3.16227766;
 	const int 	 x_rt = 12;
-	const double w_rot = 5.0;
-	const double w_reg = 10.0;
-	const double w_con = 100.0;
+	double w_rot = 1.0;
+	double w_reg = 10.0;
+	double w_con = 100.0;
+	double w_gv = 1.0;
 
 	int x_order;
 	int fx_order;
+
+	void initWeight(std::string modelName);
 
 	void setOrder(std::shared_ptr<Param> param);
 

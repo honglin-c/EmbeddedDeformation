@@ -27,15 +27,17 @@ bool GaussNewtonOptimizer::solveSingleStep(std::shared_ptr<ResidualFunction> f, 
   	SimplicialLDLT<SparseMatrix<double>> chol;
 
 	// Perform a single step in Gauss-Newton Method
-	// cout << "Jf start" << endl;
+	cout << "Jf start" << endl;
 	SparseMd Jf = tf->calcJf(xparam);
-	// cout << "Jf finish" << endl;
+	cout << "Jf finish" << endl;
 	VectorXd fx_Ep = tf->calcfx_Ep(xparam);
 	SparseMatrix<double> fx_Ek1 = tf->calcfx_Ek1(xparam);
 	VectorXd fx_Ek2 = tf->calcfx_Ek2(xparam);
-	// cout << "fx finish" << endl;
+	cout << "JfTfx_Gv start" << endl;
+	VectorXd JfTfx_Gv = tf->calcJfTfx_Gv(xparam);
+	cout << "JfTfx_Gv finish" << endl;
 
-	VectorXd delta = 0.2 * descentDirection(Jf, fx_Ep, fx_Ek1, fx_Ek2);
+	VectorXd delta = descentDirection(Jf, fx_Ep, fx_Ek1, fx_Ek2, JfTfx_Gv);
 
 	VectorXd fx = tf->calcfx(xparam);  // for debug
 	Fx = fx.transpose() * fx;
@@ -55,21 +57,24 @@ bool GaussNewtonOptimizer::solveSingleStep(std::shared_ptr<ResidualFunction> f, 
 	VectorXd fx_rot = fx.segment(0, tf->reg_begin);
 	VectorXd fx_reg = fx.segment(tf->reg_begin, tf->con_begin - tf->reg_begin);
 	VectorXd fx_con = fx.segment(tf->con_begin, tf->kin_begin - tf->con_begin);
+	VectorXd fx_gv = fx.segment(tf->gv_begin, fx.size() - tf->gv_begin);
 	double Fx_Ep  = fx_Ep.transpose() * fx_Ep;
-	double Fx_Ek2 = fx_Ek2.transpose() * fx_Ek2;
 	double Fx_rot = fx_rot.transpose() * fx_rot;
 	double Fx_reg = fx_reg.transpose() * fx_reg;
 	double Fx_con = fx_con.transpose() * fx_con;
+	double Fx_Ek2 = fx_Ek2.transpose() * fx_Ek2;
+	double Fx_gv  = fx_gv.transpose() * fx_gv;
 
 	cout << "Fx     = " << Fx << endl;
 	cout << "Fx_Ep  = " << Fx_Ep << endl;
 	cout << "Fx_Erot= " << Fx_rot << endl;
 	cout << "Fx_Ereg= " << Fx_reg << endl;
 	cout << "Fx_Econ= " << Fx_con << endl;
-	cout << "Fx_Ek2 = " << Fx_Ek2 << endl << endl;
+	cout << "Fx_Ek2 = " << Fx_Ek2 << endl;
+	cout << "Fx_Egv = " << Fx_gv << endl << endl;
 #endif
 
-	double alpha = lineSearch(tf, xparam, delta);
+	double alpha = lineSearch(tf, xparam, delta, true);
 	cout << "Line Search: alpha = " << alpha << endl;
 	updateParam(xparam, alpha * delta, true);
 
@@ -147,7 +152,10 @@ bool GaussNewtonOptimizer::solve(std::shared_ptr<ResidualFunction> f, std::share
 
 		// Record update time
 		begin = clock();
-		updateParam(param, delta, false);
+
+		double alpha = lineSearch(tf, xparam, delta, false);
+		cout << "Line Search: alpha = " << alpha << endl;
+		updateParam(xparam, alpha * delta, false);
 		end = clock();
 		def_time += end - begin;
 	}
@@ -227,7 +235,8 @@ VectorXd GaussNewtonOptimizer::descentDirection(const Eigen::SparseMatrix<double
 												bool symbolic)
 {
 	// Solving
-  	SparseMd JfTJf = Jf.transpose() * Jf;
+	MatrixXd I = MatrixXd::Identity(Jf.cols(), Jf.cols());
+  	SparseMd JfTJf = Jf.transpose() * Jf + mu * I;
 
   	if(symbolic)
   		chol.analyzePattern(JfTJf);
@@ -303,13 +312,58 @@ VectorXd GaussNewtonOptimizer::descentDirection(const Eigen::SparseMatrix<double
 	return x;
 }
 
+Eigen::VectorXd GaussNewtonOptimizer::descentDirection(const Eigen::SparseMatrix<double> &Jf,
+											  		   const Eigen::VectorXd &fx_Ep,
+											  		   const Eigen::SparseMatrix<double> &fx_Ek1, // E_k1 is related to delta
+											  		   const Eigen::VectorXd &fx_Ek2, // E_k2 is unrelated to delta
+											  		   const Eigen::VectorXd &JfTfx_Gv)
+{
+	SimplicialLDLT<SparseMd> chol;
+	MatrixXd I = MatrixXd::Identity(Jf.cols(), Jf.cols());
+	SparseMd A = Jf.transpose() * Jf + Jf.transpose() * fx_Ek1 + mu * I;
+	// cout << "d2" << endl;
+	VectorXd b = -1.0 * (Jf.transpose() * (fx_Ep + fx_Ek2) + JfTfx_Gv);
+	// cout << "d3" << endl;
+	chol.compute(A);
+	VectorXd x = chol.solve(b);
+	if(chol.info() == Eigen::ComputationInfo::NumericalIssue)
+  	{
+  		std::cout << "ERROR: Cholesky Decompostion Fail! JfTJf is not positive definite" << std::endl;
+
+  		// Calculate all the eigenvalues and catch the negative ones
+  		MatrixXd temp = MatrixXd(A);
+  		SelfAdjointEigenSolver<MatrixXd> solver(temp);
+  		int size = solver.eigenvalues().size();
+  		VectorXd x;
+  		for(int k = 0; k < size; k++)
+  		{
+  			complex<double> result = solver.eigenvalues()(k);
+  			if(result.real() < 0.0f)
+  			{
+  				std::cout << "catch negative eigenvalue (" << k << ") : " << result << std::endl;
+  				x = solver.eigenvectors().col(k);
+  			}
+  		}
+  		// use the first 0 eigenvector as the descent direction for debug
+  		return x;
+  		// std::cout << solver.eigenvalues() << std::endl;
+	}
+	// cout << "d4" << endl;
+	return x;
+}
+
 // Perform a Line Search
-double GaussNewtonOptimizer::lineSearch(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param, Eigen::VectorXd delta)
+double GaussNewtonOptimizer::lineSearch(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param, Eigen::VectorXd delta, bool animation)
 {
 	double alpha = 10.0, p = 0.5;
 
 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
-	shared_ptr<AnimateTargetFunction> tf = static_pointer_cast<AnimateTargetFunction, ResidualFunction>(f);
+	shared_ptr<DeformTargetFunction> tf;
+	if(animation)
+		tf = static_pointer_cast<AnimateTargetFunction, ResidualFunction>(f);
+	else 
+		tf = static_pointer_cast<DeformTargetFunction, ResidualFunction>(f);
+
 	double Fx0, Fxi = 0.0;
 	VectorXd JF0, JFi;
 	Fx0 = tf->calcFx(xparam);

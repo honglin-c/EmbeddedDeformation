@@ -1,0 +1,13 @@
+{
+	"weight": {
+		"w_rot": 1.0,
+		"w_reg": 10.0,
+		"w_con": 100.0,
+		"w_gv": 10.0
+	},
+	"pin": {
+		"head": {
+			"obj": "small_half.obj"
+		}
+	}
+}

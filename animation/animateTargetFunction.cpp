@@ -7,6 +7,7 @@ using namespace std;
 AnimateTargetFunction::AnimateTargetFunction(std::shared_ptr<Param> param): DeformTargetFunction(param)
 {
 	setOrder(param);
+	gravity = g * w_gv;
 }
 
 AnimateTargetFunction::~AnimateTargetFunction()
@@ -40,8 +41,13 @@ Eigen::SparseMatrix<double> AnimateTargetFunction::calcJf(std::shared_ptr<Param>
 
 	// E_kin
 	// row range: from nodes.size() * (6 + N(nodes).size()) + vertices.size() + 1
-	// 			  to nodes.size() * (6 + N(nodes).size()) + vertices.size() + nodes.size()
+	// 			  to nodes.size() * (6 + N(nodes).size()) + vertices.size() + nodes.size() * 3
 	calcJfKin(param, tripletList);
+
+	// E_gv
+	// row range: from nodes.size() * (6 + N(nodes).size()) + vertices.size() + nodes.size() * 3 + 1
+	// 			  to nodes.size() * (6 + N(nodes).size()) + vertices.size() + nodes.size() * 6 + 1
+	calcJfGv(param, tripletList);
 
 	Jf.setFromTriplets(tripletList.begin(), tripletList.end());
 
@@ -60,6 +66,8 @@ Eigen::VectorXd AnimateTargetFunction::calcfx(std::shared_ptr<Param> param)
 	calcfxCon(param, fx);
 	// Ekin
 	calcfxKin(param, fx);
+	// Eg
+	calcfxGv(param, fx);
 	return fx;
 }
 
@@ -131,6 +139,19 @@ Eigen::VectorXd AnimateTargetFunction::calcfx_Ek2(std::shared_ptr<Param> param)
 	return fx_Ek2;
 }
 
+Eigen::VectorXd AnimateTargetFunction::calcJfTfx_Gv(std::shared_ptr<Param> param)
+{
+	VectorXd JfTfx_G = VectorXd::Zero(x_order);
+	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
+	std::vector<Node *> nodes = xparam->nodes;
+
+	for(int n_i = 0; n_i < nodes.size(); n_i++)
+	{
+		JfTfx_G[x_rt * n_i + 9 + 1] = 0.5 * m * m * gravity;
+	}
+	return JfTfx_G;
+}
+
 void AnimateTargetFunction::calcJfKin(std::shared_ptr<Param> param, std::vector<Tf> &tripletList)
 {
 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
@@ -150,7 +171,6 @@ void AnimateTargetFunction::calcJfKin(std::shared_ptr<Param> param, std::vector<
 void AnimateTargetFunction::calcfxKin(std::shared_ptr<Param> param, Eigen::VectorXd &fx)
 {
 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
-
 	std::vector<Node *> nodes = xparam->nodes;
 	int index = kin_begin;
 	Vector3d kinTerm;
@@ -164,6 +184,30 @@ void AnimateTargetFunction::calcfxKin(std::shared_ptr<Param> param, Eigen::Vecto
 	}
 }
 
+void AnimateTargetFunction::calcJfGv(std::shared_ptr<Param> param, std::vector<Tf> &tripletList)
+{
+	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
+	std::vector<Node *> nodes = xparam->nodes;
+	int row, col;
+	for(int n_i = 0; n_i < nodes.size(); n_i++)
+	{
+		row = gv_begin + n_i + 1; // for y only
+		col = n_i * x_rt + 9 + 1;
+		tripletList.push_back(Tf(row, col, m * std::sqrt(gravity) * 0.5 / std::sqrt(default_height + nodes[n_i]->getTranslation()[1])));
+	}
+}
+
+void AnimateTargetFunction::calcfxGv(std::shared_ptr<Param> param, Eigen::VectorXd &fx)
+{
+	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
+	std::vector<Node *> nodes = xparam->nodes;
+
+	for(int n_i = 0; n_i < nodes.size(); n_i++)
+	{
+		fx[gv_begin + n_i * 3 + 1] = m * std::sqrt(gravity) * std::sqrt(default_height + nodes[n_i]->getTranslation()[1]);
+	}
+}
+
 void AnimateTargetFunction::setOrder(std::shared_ptr<Param> param)
 {
 	DeformTargetFunction::setOrder(param);
@@ -173,6 +217,10 @@ void AnimateTargetFunction::setOrder(std::shared_ptr<Param> param)
 	std::vector<GraphVertex *> vertices = xparam->vertices;
 	std::vector<Node *> nodes = xparam->nodes;
 
+	// Kinetic term
 	kin_begin = fx_order;
+	fx_order += 3 * nodes.size();
+	// Gravity term
+	gv_begin = fx_order;
 	fx_order += 3 * nodes.size();
 }

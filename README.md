@@ -8,7 +8,7 @@ A c++ implementation of _Embedded Deformation for Shape Manipulation(Siggraph 20
 
 - [x] read configure file - json format
 
-- [ ] add animation <-> ma = F_inner + F_outer <-> energy function
+- [x] add animation <-> ma = F_inner + F_outer <-> energy function
 
 - [x] clean the code
 

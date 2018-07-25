@@ -52,10 +52,16 @@ private:
 							  		 const Eigen::VectorXd &fx_Ep,
 							  		 const Eigen::SparseMatrix<double> &fx_Ek1, // E_k1 is related to delta
 							  		 const Eigen::VectorXd &fx_Ek2); // E_k2 is unrelated to delta
+	Eigen::VectorXd descentDirection(const Eigen::SparseMatrix<double> &Jf,
+							  		 const Eigen::VectorXd &fx_Ep,
+							  		 const Eigen::SparseMatrix<double> &fx_Ek1, // E_k1 is related to delta
+							  		 const Eigen::VectorXd &fx_Ek2, // E_k2 is unrelated to delta
+							  		 const Eigen::VectorXd &JfTfx_Gv); 
 	// Perform a Line Search
 	double lineSearch(std::shared_ptr<ResidualFunction> f, 
 					  std::shared_ptr<Param> param,
-					  Eigen::VectorXd delta);
+					  Eigen::VectorXd delta,
+					  bool animation);
 	// Zoom using bisection interpolation 
 	// Reference: Numerical Optimization P61 Algorithm 3.6
 	double zoom(std::shared_ptr<ResidualFunction> f,

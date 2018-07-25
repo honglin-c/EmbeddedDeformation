@@ -12,7 +12,10 @@ class ResidualFunction
 {
 public:
 	virtual Eigen::SparseMatrix<double> calcJf(std::shared_ptr<Param> param) = 0;
-	virtual Eigen::VectorXd 			calcfx(std::shared_ptr<Param> param) = 0;
+	virtual Eigen::VectorXd             calcfx(std::shared_ptr<Param> param) = 0;
+
+	virtual double                      calcFx(std::shared_ptr<Param> param) = 0;
+	virtual Eigen::VectorXd             calcJF(std::shared_ptr<Param> param) = 0;
 };
 
 #endif

@@ -1,16 +1,38 @@
 #include "deformTargetFunction.h"
+#include "../common/JSONReader.h"
+#include "../resource_manager.h"
 #include <iostream>
 
 using namespace Eigen;
 using namespace std;
+using namespace rapidjson;
 
 DeformTargetFunction::DeformTargetFunction(shared_ptr<Param> param)
 {
 	setOrder(param);
+	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
+	initWeight(xparam->modelName);
 }
 
 DeformTargetFunction::~DeformTargetFunction()
 {}
+
+void DeformTargetFunction::initWeight(std::string modelName)
+{
+	Document d = JSONReader::readJSON(_MODEL_PREFIX_"/json/" + modelName + ".json");
+	if(d.HasMember("weight"))
+	{
+		if(d["weight"].HasMember("w_rot"))
+			w_rot = d["weight"]["w_rot"].GetFloat();
+		if(d["weight"].HasMember("w_reg"))
+			w_reg = d["weight"]["w_reg"].GetFloat();
+		if(d["weight"].HasMember("w_con"))
+			w_con = d["weight"]["w_con"].GetFloat();
+		if(d["weight"].HasMember("w_gv"))
+			w_gv = d["weight"]["w_gv"].GetFloat();
+	}
+}
+
 
 void DeformTargetFunction::setOrder(shared_ptr<Param> param)
 {
@@ -57,6 +79,19 @@ Eigen::SparseMatrix<double> DeformTargetFunction::calcJf(shared_ptr<Param> param
 	Jf.setFromTriplets(tripletList.begin(), tripletList.end());
 
 	return Jf;
+}
+
+double DeformTargetFunction::calcFx(std::shared_ptr<Param> param)
+{
+	VectorXd fx = calcfx(param);
+	return fx.transpose() * fx;
+}
+
+VectorXd DeformTargetFunction::calcJF(std::shared_ptr<Param> param)
+{
+	SparseMatrix<double> Jf = calcJf(param);
+	VectorXd fx = calcfx(param);
+	return 2.0 * Jf.transpose() * fx;
 }
 
 void DeformTargetFunction::calcJfRot(shared_ptr<Param> param, vector<Tf> &tripletList)

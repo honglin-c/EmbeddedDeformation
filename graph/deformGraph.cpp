@@ -193,5 +193,6 @@ bool DeformGraph::optimizeSingleStep()
 	GaussNewtonOptimizer * optimizer = new GaussNewtonOptimizer(xparam);	
 	bool stopped = optimizer->solveSingleStep(targetFunc, xparam);
 	delete optimizer;
-	return stopped;
+	return false;
+	// return stopped;
 }
