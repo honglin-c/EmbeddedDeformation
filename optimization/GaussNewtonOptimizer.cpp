@@ -177,6 +177,23 @@ bool GaussNewtonOptimizer::solve(std::shared_ptr<ResidualFunction> f, std::share
 	return stopped;
 }
 
+void GaussNewtonOptimizer::applyIneritia(std::shared_ptr<Param> param)
+{
+
+	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
+	std::vector<Node *> nodes = xparam->nodes;
+
+	VectorXd displacement = VectorXd::Zero(nodes.size() * x_rt);
+	for(int n_i = 0; n_i < nodes.size(); n_i ++)
+	{
+		Vector3d velocity = nodes[n_i]->getVelocity();
+		for(int ti = 0; ti < 3; ti++)
+			displacement[n_i * x_rt + 9 + ti] = velocity[ti] * timestep;
+	}
+	updateParam(param, displacement, false);
+}
+
+
 void GaussNewtonOptimizer::updateParam(std::shared_ptr<Param> param, Eigen::VectorXd delta, bool animation)
 {
 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
@@ -355,7 +372,7 @@ Eigen::VectorXd GaussNewtonOptimizer::descentDirection(const Eigen::SparseMatrix
 // Perform a Line Search
 double GaussNewtonOptimizer::lineSearch(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param, Eigen::VectorXd delta, bool animation)
 {
-	double alpha = 10.0, p = 0.5;
+	double alpha = 4.0, p = 0.5;
 
 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
 	shared_ptr<DeformTargetFunction> tf;

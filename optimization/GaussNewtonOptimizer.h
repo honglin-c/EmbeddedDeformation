@@ -36,12 +36,13 @@ private:
 	const int 	 max_iter = 12;
 	const double epsilon = 1e-6;
 	const int 	 x_rt = 12;
-	const double timestep = 0.1;
+	const double timestep = 0.3;
 	const double c1 = 1e-4;
 	const double c2 = 0.9;
 	const double mu = 1e-7;
 
 	void updateParam(std::shared_ptr<Param> param, Eigen::VectorXd delta, bool animation);
+	void applyIneritia(std::shared_ptr<Param> param);
 
 	Eigen::VectorXd descentDirection(const Eigen::SparseMatrix<double> &Jf,
 							  		 const Eigen::VectorXd &fx,

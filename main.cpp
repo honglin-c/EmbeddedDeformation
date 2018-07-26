@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
         
         cout << "Start Optimization" << endl;
 
-        int step = 0, max_iter = 16;
+        int step = 0, max_iter = 20;
         bool stopped = false;
 
         // Loop.
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
             // Swap the buffers.
             glfwSwapBuffers(window);
 
-            if(step == max_iter || stopped)
+            if((step == max_iter || stopped) && modelName != "wand" && modelName != "hockey_stick")
             {
                 sleep_for(nanoseconds(1000));
                 break;
@@ -238,40 +238,35 @@ bool parse(int argc, char * argv[])
     // parse command line option
     if(argc == 2)
     {
-        if(strcmp(argv[1], "-cat") == 0)
-            modelName = "cat";
-        else if (strcmp(argv[1], "-giraffe") == 0)
-            modelName = "giraffe";
-        else if (strcmp(argv[1], "-wand") == 0)
-            modelName = "wand";
-        else if (strcmp(argv[1], "-dcat") == 0)
+        if(strlen(argv[1]) > 2)
         {
-            modelName = "cat";
-            animation = false;
-        }
-        else if (strcmp(argv[1], "-dgiraffe") == 0)
-        {
-            modelName = "giraffe";
-            animation = false;           
-        }
-        else if (strcmp(argv[1], "-dwand") == 0)
-        {
-            modelName = "wand";
-            animation = false;           
-        }
-        else if (strcmp(argv[1], "--help") == 0)
-        {
-            cout << "option: " << endl;
-            cout << "-cat: display original cat and cat model animation" << endl;
-            cout << "-giraffe: display original giraffe and giraffe model animation" << endl;
-            cout << "-dcat: display original cat and deformed cat model" << endl;
-            cout << "-dgiraffe: display original giraffe and deformed giraffe model" << endl;
-            return false;
-        }
-        else
-        {
-            cout << "invalid argument, see --help" << endl;
-            return false;
+            if(argv[1][0] == '-' && argv[1][1] != '-')
+            {
+                if(argv[1][1] == 'd')
+                {
+                    animation = false;
+                    modelName = std::string(argv[1] + 2);
+                }
+                else
+                {
+                    animation = true;
+                    modelName = std::string(argv[1] + 1);
+                }
+            }
+            else if (strcmp(argv[1], "--help") == 0)
+            {
+                cout << "option: " << endl;
+                cout << "-cat: display original cat and cat model animation" << endl;
+                cout << "-giraffe: display original giraffe and giraffe model animation" << endl;
+                cout << "-dcat: display original cat and deformed cat model" << endl;
+                cout << "-dgiraffe: display original giraffe and deformed giraffe model" << endl;
+                return false;
+            }
+            else
+            {
+                cout << "invalid argument, see --help" << endl;
+                return false;
+            }
         }
     }
     else if(argc != 1)
@@ -394,12 +389,14 @@ void display()
     phong.SetFloat("material.shininess", 0.0f);
     // Set the scaling
     glm::mat4 phong_scaling;
+    float scale;
     if(modelName == "giraffe")
     {
         phong_scaling = glm::mat4(0.1f, 0.0f,  0.0f,  0.0f,
                                   0.0f,  0.1f, 0.0f,  0.0f,
                                   0.0f,  0.0f,  0.1f, 0.0f,
                                   0.0f,  0.0f,  0.0f,  1.0f);
+        scale = 0.1;
     }
     else if (modelName == "wand")
     {
@@ -407,6 +404,15 @@ void display()
                                   0.0f,  0.1f, 0.0f,  0.0f,
                                   0.0f,  0.0f,  0.1f, 0.0f,
                                   0.0f,  0.0f,  0.0f,  1.0f);
+        scale = 0.1;
+    }
+    else if (modelName == "hockey_stick")
+    {
+        phong_scaling = glm::mat4(0.001f, 0.0f,  0.0f,  0.0f,
+                                  0.0f, 0.001f,  0.0f,  0.0f,
+                                  0.0f,   0.0f,0.001f,  0.0f,
+                                  0.0f,   0.0f,  0.0f,  1.0f);
+        scale = 0.001;
     }
     else
     {
@@ -414,6 +420,7 @@ void display()
                                   0.0f,  1.0f,  0.0f,  0.0f,
                                   0.0f,  0.0f,  1.0f,  0.0f,
                                   0.0f,  0.0f,  0.0f,  1.0f);
+        scale = 1.0;
     }
     phong.SetMatrix4("scaling", phong_scaling);
     Model *originalModel = ResourceManager::GetModel(modelName);
@@ -426,10 +433,10 @@ void display()
     Model *sphere = ResourceManager::GetModel("sphere");
     color.SetMatrix4("view", view);
     color.SetMatrix4("projection", projection);
-    glm::mat4 color_scaling(0.3f, 0.0f, 0.0f, 0.0f,
-                      0.0f, 0.3f, 0.0f, 0.0f,
-                      0.0f, 0.0f, 0.3f, 0.0f,
-                      0.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 color_scaling(0.6f, 0.0f, 0.0f, 0.0f,
+                            0.0f, 0.6f, 0.0f, 0.0f,
+                            0.0f, 0.0f, 0.6f, 0.0f,
+                            0.0f, 0.0f, 0.0f, 1.0f);
     color.SetMatrix4("scaling", color_scaling);
 
     Sample *sample = ResourceManager::GetSample(modelName);
@@ -447,7 +454,7 @@ void display()
                 std::vector<glm::vec3>::iterator pos;
                 for (pos = sample->begin(); pos != sample->end(); pos++)
                 {
-                    glm::vec3 position = *pos + modelPos;
+                    glm::vec3 position = scale * (*pos) + modelPos;
                     color.SetVector3f("givenColor", glm::vec3(1.0f, 1.0f, 1.0f));
                     // Draw the particle.
                     model = glm::mat4();
@@ -472,7 +479,7 @@ void display()
         {
             for (auto pos:deform_sample)
             {
-                glm::vec3 position = pos + deformPos;
+                glm::vec3 position = scale * pos + deformPos;
                 color.SetVector3f("givenColor", glm::vec3(0.0f, 1.0f, 0.0f));
                 // Draw the particle.
                 model = glm::mat4();
