@@ -14,7 +14,7 @@ GaussNewtonOptimizer::GaussNewtonOptimizer(std::shared_ptr<Param> param):constra
 GaussNewtonOptimizer::~GaussNewtonOptimizer()
 {}
 
-bool GaussNewtonOptimizer::solveSingleStep(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param)
+bool GaussNewtonOptimizer::solveSingleFrame(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param)
 {
 	bool stopped = false;
 	// Initialize
@@ -22,61 +22,87 @@ bool GaussNewtonOptimizer::solveSingleStep(std::shared_ptr<ResidualFunction> f, 
 	std::vector<GraphVertex *> vertices = xparam->vertices;
 	std::vector<Node *> nodes = xparam->nodes;
 	shared_ptr<AnimateTargetFunction> tf = static_pointer_cast<AnimateTargetFunction, ResidualFunction>(f);
-	tf->setTimestep(timestep);
-	double Fx = 0.0;
+	timestep = tf->getTimestep();
+	double Fx = 0.0, Fx_old = 0.0;
   	SimplicialLDLT<SparseMatrix<double>> chol;
 
-	// Perform a single step in Gauss-Newton Method
-	cout << "Jf start" << endl;
-	SparseMd Jf = tf->calcJf(xparam);
-	cout << "Jf finish" << endl;
-	VectorXd fx_Ep = tf->calcfx_Ep(xparam);
-	SparseMatrix<double> fx_Ek1 = tf->calcfx_Ek1(xparam);
-	VectorXd fx_Ek2 = tf->calcfx_Ek2(xparam);
-	cout << "JfTfx_Gv start" << endl;
-	VectorXd JfTfx_Gv = tf->calcJfTfx_Gv(xparam);
-	cout << "JfTfx_Gv finish" << endl;
+  	VectorXd fx;
 
-	VectorXd delta = descentDirection(Jf, fx_Ep, fx_Ek1, fx_Ek2, JfTfx_Gv);
+  	int i = 0;
+  	for(i = 0; i < max_iter; i++)
+  	{
+	  	// Perform a single step in Gauss-Newton Method
+		SparseMd Jf = tf->calcJf(xparam);
+		fx = tf->calcfx(xparam);
 
-	VectorXd fx = tf->calcfx(xparam);  // for debug
-	Fx = fx.transpose() * fx;
+		VectorXd delta = descentDirection(Jf, fx, chol, false);
 
-	MatrixXd deltaFx = 2.0 * fx.transpose() * Jf;
+		Fx_old = Fx;
+		Fx = fx.transpose() * fx;
 
-	if(deltaFx.maxCoeff() < std::cbrt(epsilon) * (1.0 + Fx) &&
-	   delta.maxCoeff() < std::sqrt(epsilon) * (1.0 + delta.maxCoeff()))
-		stopped = true;
-	else
-	{
+		MatrixXd deltaFx = 2.0 * fx.transpose() * Jf;
+
+		cout << "fabs(Fx - Fx_old) = " << std::fabs(Fx - Fx_old) << " threshold = " <<  epsilon * (1.0 + Fx) << endl;
+		cout << "Fx = " << Fx << " Fx_old = " << Fx_old << endl;
 		cout << "deltaFx.maxCoeff() = " << deltaFx.maxCoeff() << " threshold = " << std::cbrt(epsilon) * (1.0 + Fx) << endl;
 		cout << "delta.maxCoeff()   = " << delta.maxCoeff() << " threshold = " << std::sqrt(epsilon) * (1.0 + delta.maxCoeff()) << endl;
-	}
 
-#ifdef DEBUG
-	VectorXd fx_rot = fx.segment(0, tf->reg_begin);
-	VectorXd fx_reg = fx.segment(tf->reg_begin, tf->con_begin - tf->reg_begin);
-	VectorXd fx_con = fx.segment(tf->con_begin, tf->kin_begin - tf->con_begin);
-	VectorXd fx_gv = fx.segment(tf->gv_begin, fx.size() - tf->gv_begin);
-	double Fx_Ep  = fx_Ep.transpose() * fx_Ep;
-	double Fx_rot = fx_rot.transpose() * fx_rot;
-	double Fx_reg = fx_reg.transpose() * fx_reg;
-	double Fx_con = fx_con.transpose() * fx_con;
-	double Fx_Ek2 = fx_Ek2.transpose() * fx_Ek2;
-	double Fx_gv  = fx_gv.transpose() * fx_gv;
+		if(std::fabs(Fx - Fx_old) < epsilon * (1.0 + Fx) /*&&
+		   deltaFx.maxCoeff() < std::cbrt(epsilon) * (1.0 + Fx) &&
+		   delta.maxCoeff() < std::sqrt(epsilon) * (1.0 + delta.maxCoeff())*/)
+		{
+			stopped = true;
+			cout << "Exit at " << i << "-th iteration" << endl << endl;
+			break;
+		}
 
-	cout << "Fx     = " << Fx << endl;
-	cout << "Fx_Ep  = " << Fx_Ep << endl;
-	cout << "Fx_Erot= " << Fx_rot << endl;
-	cout << "Fx_Ereg= " << Fx_reg << endl;
-	cout << "Fx_Econ= " << Fx_con << endl;
-	cout << "Fx_Ek2 = " << Fx_Ek2 << endl;
-	cout << "Fx_Egv = " << Fx_gv << endl << endl;
+		double alpha = lineSearch(tf, xparam, delta, true);
+		cout << "Line Search: alpha = " << alpha << endl;
+		updateParam(xparam, alpha * delta, true);
+  	}
+  	updateFrame(xparam);
+
+ #ifdef DEBUG
+		VectorXd fx_Ep = fx.segment(0, tf->kin_begin);
+		VectorXd fx_rot = fx.segment(0, tf->reg_begin);
+		VectorXd fx_reg = fx.segment(tf->reg_begin, tf->con_begin - tf->reg_begin);
+		VectorXd fx_con = fx.segment(tf->con_begin, tf->kin_begin - tf->con_begin);
+		VectorXd fx_Ek = fx.segment(tf->kin_begin, tf->gv_begin - tf->kin_begin);
+		VectorXd fx_gv = fx.segment(tf->gv_begin, fx.size() - tf->gv_begin);
+		double Fx_Ep  = fx_Ep.transpose() * fx_Ep;
+		double Fx_rot = fx_rot.transpose() * fx_rot;
+		double Fx_reg = fx_reg.transpose() * fx_reg;
+		double Fx_con = fx_con.transpose() * fx_con;
+		double Fx_Ek = fx_Ek.transpose() * fx_Ek;
+		double Fx_gv  = fx_gv.transpose() * fx_gv;
+		double samplePos = nodes[4]->getTranslationFrame()[1];
+		double sampleVelocity = nodes[4]->getVelocityFrame()[1];
+		cout << "Fx     = " << Fx << endl;
+		cout << "Fx_Ep  = " << Fx_Ep << endl;
+		cout << "Fx_Erot= " << Fx_rot << endl;
+		cout << "Fx_Ereg= " << Fx_reg << endl;
+		cout << "Fx_Econ= " << Fx_con << endl;
+		cout << "Fx_Ek = " << Fx_Ek << endl;
+		cout << "samplePos=" << samplePos << endl;
+		cout << "sampleVelocity=" << sampleVelocity << endl;
+		cout << "Fx_Egv = " << Fx_gv << endl << endl;
+
+		ofstream dataFile("Fx_data.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+
+		if (dataFile.is_open()) 
+		{
+			dataFile << Fx << " ";
+			dataFile << Fx_Ep << " ";
+			dataFile << Fx_rot << " ";
+			dataFile << Fx_reg << " ";
+			dataFile << Fx_con << " ";
+			dataFile << Fx_Ek << " ";
+			dataFile << samplePos << " ";
+			dataFile << sampleVelocity << " ";
+			dataFile << Fx_gv << endl;
+			dataFile.close();
+		} 
 #endif
-
-	double alpha = lineSearch(tf, xparam, delta, true);
-	cout << "Line Search: alpha = " << alpha << endl;
-	updateParam(xparam, alpha * delta, true);
 
 	return stopped;
 }
@@ -125,6 +151,7 @@ bool GaussNewtonOptimizer::solve(std::shared_ptr<ResidualFunction> f, std::share
 		   delta.maxCoeff() < std::sqrt(epsilon) * (1.0 + delta.maxCoeff()))
 		{
 			stopped = true;
+			break;
 		}
 		else
 		{
@@ -177,22 +204,31 @@ bool GaussNewtonOptimizer::solve(std::shared_ptr<ResidualFunction> f, std::share
 	return stopped;
 }
 
-void GaussNewtonOptimizer::applyIneritia(std::shared_ptr<Param> param)
-{
+// void GaussNewtonOptimizer::applyIneritia(std::shared_ptr<Param> param)
+// {
+// 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
+// 	std::vector<Node *> nodes = xparam->nodes;
 
+// 	VectorXd displacement = VectorXd::Zero(nodes.size() * x_rt);
+// 	for(int n_i = 0; n_i < nodes.size(); n_i ++)
+// 	{
+// 		Vector3d velocity = nodes[n_i]->getVelocity();
+// 		for(int ti = 0; ti < 3; ti++)
+// 			displacement[n_i * x_rt + 9 + ti] = velocity[ti] * timestep;
+// 	}
+// 	updateParam(param, 0.00001 * displacement, false);
+// }
+
+void GaussNewtonOptimizer::updateFrame(std::shared_ptr<Param> param)
+{
 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
 	std::vector<Node *> nodes = xparam->nodes;
-
-	VectorXd displacement = VectorXd::Zero(nodes.size() * x_rt);
-	for(int n_i = 0; n_i < nodes.size(); n_i ++)
+	for(auto n: nodes)
 	{
-		Vector3d velocity = nodes[n_i]->getVelocity();
-		for(int ti = 0; ti < 3; ti++)
-			displacement[n_i * x_rt + 9 + ti] = velocity[ti] * timestep;
+		n->setVelocityFrame((n->getTranslation() - n->getTranslationFrame()) / timestep);
+		n->updateTranslationFrame();
 	}
-	updateParam(param, displacement, false);
 }
-
 
 void GaussNewtonOptimizer::updateParam(std::shared_ptr<Param> param, Eigen::VectorXd delta, bool animation)
 {
@@ -221,10 +257,11 @@ void GaussNewtonOptimizer::updateParam(std::shared_ptr<Param> param, Eigen::Vect
 		n->addDeltaTranslation(delta_translation);
 
 		// Update velocity if it is animation
-		if(animation)
-		{
-			n->setVelocity(t / timestep);
-		}
+		// if(animation)
+		// {
+		// 	// n->setVelocity(2 * t / timestep - n->getVelocity());
+		// 	n->setVelocity(t / timestep);
+		// }
 		n_i++;
 	}
 
@@ -340,6 +377,7 @@ Eigen::VectorXd GaussNewtonOptimizer::descentDirection(const Eigen::SparseMatrix
 	SparseMd A = Jf.transpose() * Jf + Jf.transpose() * fx_Ek1 + mu * I;
 	// cout << "d2" << endl;
 	VectorXd b = -1.0 * (Jf.transpose() * (fx_Ep + fx_Ek2) + JfTfx_Gv);
+	// VectorXd b = -1.0 * (Jf.transpose() * (fx_Ep + fx_Ek2) + JfTfx_Gv);
 	// cout << "d3" << endl;
 	chol.compute(A);
 	VectorXd x = chol.solve(b);
@@ -372,8 +410,6 @@ Eigen::VectorXd GaussNewtonOptimizer::descentDirection(const Eigen::SparseMatrix
 // Perform a Line Search
 double GaussNewtonOptimizer::lineSearch(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param, Eigen::VectorXd delta, bool animation)
 {
-	double alpha = 4.0, p = 0.5;
-
 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
 	shared_ptr<DeformTargetFunction> tf;
 	if(animation)
@@ -381,12 +417,13 @@ double GaussNewtonOptimizer::lineSearch(std::shared_ptr<ResidualFunction> f, std
 	else 
 		tf = static_pointer_cast<DeformTargetFunction, ResidualFunction>(f);
 
+	double alpha = tf->line_search_upper_bound, p = 0.5;
 	double Fx0, Fxi = 0.0;
 	VectorXd JF0, JFi;
 	Fx0 = tf->calcFx(xparam);
 	JF0 = tf->calcJF(xparam); 
 
-	for(int i = 0; i < 7; i++)
+	for(int i = 0; i < tf->line_search_iter; i++)
 	{
 		updateParam(xparam, alpha * delta, true);
 		Fxi = tf->calcFx(xparam);

@@ -10,7 +10,7 @@ class GaussNewtonSolver
 {
 public:
 	virtual bool solve(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param) = 0;
-	virtual bool solveSingleStep(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param) = 0;
+	virtual bool solveSingleFrame(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param) = 0;
 };
 
 #endif

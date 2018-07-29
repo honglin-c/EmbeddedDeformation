@@ -1,9 +1,14 @@
 {
 	"weight": {
 		"w_rot": 1.0,
-		"w_reg": 5.0,
+		"w_reg": 10.0,
 		"w_con": 100.0,
-		"w_gv": 5.0
+		"w_gv": 1.0
+	},
+	"iteration": {
+		"line_search_iter": 8,
+		"line_search_upper_bound": 1.0,
+		"timestep": 0.01
 	},
 	"pin": {
 		"head": {

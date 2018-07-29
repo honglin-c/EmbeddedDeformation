@@ -185,13 +185,14 @@ void DeformGraph::optimize()
 	delete optimizer;
 }
 
-bool DeformGraph::optimizeSingleStep()
+bool DeformGraph::optimizeSingleFrame()
 {
+	cout << "[Optimize single step]" << endl;
 	shared_ptr<DeformParam> xparam(new DeformParam);
 	xparam->setParamInfo(modelName, vertices, nodes);
 	shared_ptr<AnimateTargetFunction> targetFunc(new AnimateTargetFunction(xparam));
 	GaussNewtonOptimizer * optimizer = new GaussNewtonOptimizer(xparam);	
-	bool stopped = optimizer->solveSingleStep(targetFunc, xparam);
+	bool stopped = optimizer->solveSingleFrame(targetFunc, xparam);
 	delete optimizer;
 	return false;
 	// return stopped;

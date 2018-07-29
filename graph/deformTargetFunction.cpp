@@ -11,13 +11,13 @@ DeformTargetFunction::DeformTargetFunction(shared_ptr<Param> param)
 {
 	setOrder(param);
 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
-	initWeight(xparam->modelName);
+	initParam(xparam->modelName);
 }
 
 DeformTargetFunction::~DeformTargetFunction()
 {}
 
-void DeformTargetFunction::initWeight(std::string modelName)
+void DeformTargetFunction::initParam(std::string modelName)
 {
 	Document d = JSONReader::readJSON(_MODEL_PREFIX_"/json/" + modelName + ".json");
 	if(d.HasMember("weight"))
@@ -30,6 +30,13 @@ void DeformTargetFunction::initWeight(std::string modelName)
 			w_con = d["weight"]["w_con"].GetFloat();
 		if(d["weight"].HasMember("w_gv"))
 			w_gv = d["weight"]["w_gv"].GetFloat();
+	}
+	if(d.HasMember("iteration"))
+	{
+		if(d["iteration"].HasMember("line_search_upper_bound"))
+			line_search_upper_bound = d["iteration"]["line_search_upper_bound"].GetFloat();
+		if(d["iteration"].HasMember("line_search_iter"))
+			line_search_iter = d["iteration"]["line_search_iter"].GetFloat();
 	}
 }
 

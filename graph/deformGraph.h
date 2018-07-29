@@ -41,7 +41,7 @@ public:
 	// Optimized by Gauss-Newton method
 	void optimize();
 	// Optimized by a single step in Gauss-Newton method
-	bool optimizeSingleStep();
+	bool optimizeSingleFrame();
 
 	vector<Vertex> returnVertices();
 

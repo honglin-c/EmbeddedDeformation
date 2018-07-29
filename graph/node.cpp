@@ -4,27 +4,27 @@
 Node::Node():transformed(false)
 {
 	rotation = Matrix3d::Identity();
-	velocity = translation = Vector3d(0.0, 0.0, 0.0);
+	velocity_f = translation = translation_f = Vector3d(0.0, 0.0, 0.0);
 }
 
 Node::Node(glm::vec3 _position):position(Vector3d(_position[0], _position[1], _position[2])),
 								transformed(false)
 {
 	rotation = Matrix3d::Identity();
-	velocity = translation = Vector3d(0.0, 0.0, 0.0);
+	velocity_f = translation = translation_f = Vector3d(0.0, 0.0, 0.0);
 }
 
 Node::~Node()
 {}
 
-Vector3d Node::getVelocity() const
+Vector3d Node::getVelocityFrame() const
 {
-	return velocity;
+	return velocity_f;
 }
 
-void Node::setVelocity(Vector3d velocity)
+void Node::setVelocityFrame(Vector3d velocity)
 {
-	this->velocity = velocity;
+	this->velocity_f = velocity;
 }
 
 Vector3d Node::getPosition() const
@@ -37,6 +37,15 @@ Vector3d Node::getTranslation() const
 	return translation;
 }
 
+Vector3d Node::getTranslationFrame() const
+{
+	return translation_f;
+}
+
+Vector3d Node::updateTranslationFrame()
+{
+	translation_f = translation;
+}
 
 void Node::addDeltaRotation(Matrix3d &delta)
 {

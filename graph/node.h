@@ -26,9 +26,9 @@ public:
 
     void addDeltaTranslation(Vector3d &delta);
 
-    Vector3d getVelocity() const;
+    Vector3d getVelocityFrame() const;
 
-    void setVelocity(Vector3d velocity);
+    void setVelocityFrame(Vector3d velocity);
 
     // void setPosition(Vector3d _position);
 
@@ -37,6 +37,10 @@ public:
     Matrix3d matRotation() const;
 
     Vector3d getTranslation() const;
+
+    Vector3d getTranslationFrame() const;
+
+    Vector3d updateTranslationFrame();
 
     Vector3d applyMapping(Vector3d &p);
 
@@ -70,8 +74,9 @@ private:
 	const Vector3d position;
 	Matrix3d rotation;
 	Vector3d translation;
+    Vector3d translation_f; // translation per frame
 	std::set<Node *> neighbors; // Neighbor nodes
-    Vector3d velocity; // used for animation
+    Vector3d velocity_f; // used for animation
 };
 
 #endif

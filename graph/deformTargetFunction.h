@@ -28,6 +28,9 @@ public:
 
 	int reg_begin;
 	int con_begin;
+	int line_search_iter = 8;
+	int line_search_upper_bound = 4;
+
 protected:
 	const int 	 k = 4;
 	const double sqrt10 = 3.16227766;
@@ -40,7 +43,7 @@ protected:
 	int x_order;
 	int fx_order;
 
-	void initWeight(std::string modelName);
+	void initParam(std::string modelName);
 
 	void setOrder(std::shared_ptr<Param> param);
 

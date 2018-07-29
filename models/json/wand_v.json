@@ -1,0 +1,18 @@
+{
+	"weight": {
+		"w_rot": 1.0,
+		"w_reg": 30.0,
+		"w_con": 100.0,
+		"w_gv": 0.5
+	},
+	"iteration": {
+		"line_search_iter": 8,
+		"line_search_upper_bound": 1.0,
+		"timestep": 1e-6
+	},
+	"pin": {
+		"head": {
+			"obj": "small_end.obj"
+		}
+	}
+}

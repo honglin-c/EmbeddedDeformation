@@ -30,19 +30,20 @@ public:
 	GaussNewtonOptimizer(std::shared_ptr<Param> param);
 	~GaussNewtonOptimizer();
 	bool solve(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param);
-	bool solveSingleStep(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param);
+	bool solveSingleFrame(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param);
 
 private:
-	const int 	 max_iter = 12;
-	const double epsilon = 1e-6;
+	const int 	 max_iter = 64;
+	const double epsilon = 1e-5;
 	const int 	 x_rt = 12;
-	const double timestep = 0.3;
 	const double c1 = 1e-4;
 	const double c2 = 0.9;
 	const double mu = 1e-7;
+	double timestep = 0.1;
 
+	void updateFrame(std::shared_ptr<Param> param);
 	void updateParam(std::shared_ptr<Param> param, Eigen::VectorXd delta, bool animation);
-	void applyIneritia(std::shared_ptr<Param> param);
+	// void applyIneritia(std::shared_ptr<Param> param);
 
 	Eigen::VectorXd descentDirection(const Eigen::SparseMatrix<double> &Jf,
 							  		 const Eigen::VectorXd &fx,
@@ -69,6 +70,7 @@ private:
 				std::shared_ptr<Param> param, 
 				Eigen::VectorXd delta,
 				double left, double right);
+
 	void debug(const std::string s);
 	int constraint_count; // use to measure benchmark
 };

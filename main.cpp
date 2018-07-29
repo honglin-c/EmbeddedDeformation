@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
 // Measure time
 #include <ctime>
 // OpenGL include
@@ -34,7 +35,7 @@
 #include <chrono>
 #include <thread>
 
-// #define DEBUG
+#define DEBUG
 using namespace std;
 using namespace rapidjson;
 using namespace std::this_thread; // sleep_for, sleep_until
@@ -169,6 +170,9 @@ int main(int argc, char *argv[])
     glEnable(GL_MULTISAMPLE);
     glfwSwapInterval(1);
 
+    ofstream dataFile("Fx_data.txt", std::ofstream::trunc);
+    dataFile.close();
+
     // Input Options.
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     while(!glfwWindowShouldClose(window))
@@ -189,7 +193,7 @@ int main(int argc, char *argv[])
         
         cout << "Start Optimization" << endl;
 
-        int step = 0, max_iter = 20;
+        int step = 0, max_iter = 500;
         bool stopped = false;
 
         // Loop.
@@ -218,7 +222,7 @@ int main(int argc, char *argv[])
             // Swap the buffers.
             glfwSwapBuffers(window);
 
-            if((step == max_iter || stopped) && modelName != "wand" && modelName != "hockey_stick")
+            if((step == max_iter || stopped) && modelName != "wand" && modelName != "hockey_stick" && modelName != "wand_v")
             {
                 sleep_for(nanoseconds(1000));
                 break;
@@ -398,7 +402,7 @@ void display()
                                   0.0f,  0.0f,  0.0f,  1.0f);
         scale = 0.1;
     }
-    else if (modelName == "wand")
+    else if (modelName == "wand" || modelName == "wand_v")
     {
         phong_scaling = glm::mat4(0.1f, 0.0f,  0.0f,  0.0f,
                                   0.0f,  0.1f, 0.0f,  0.0f,
@@ -508,7 +512,7 @@ void display()
     phong.SetVector3f("material.specular", glm::vec3(0.06f, 0.08f, 0.1f));
     phong.SetFloat("material.shininess", 0.0f);
     Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
-    deformModel->Draw(phong);
+    // deformModel->Draw(phong);
 
 }
 
@@ -520,7 +524,7 @@ bool simulate(int &step, const int max_iter)
     else 
         step++;
 
-    bool stopped = dgraph->optimizeSingleStep();
+    bool stopped = dgraph->optimizeSingleFrame();
 
     // Try to deform another model directly
     Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
