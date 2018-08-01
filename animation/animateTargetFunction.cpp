@@ -179,7 +179,7 @@ void AnimateTargetFunction::calcJfKin(std::shared_ptr<Param> param, std::vector<
 		for(int ti = 0; ti < 3; ti++)
 		{
 			row = kin_begin + 3 * n_i + ti;
-			col = n_i * 12 + 9 + ti;
+			col = n_i * x_rt + 9 + ti;
 			tripletList.push_back(Tf(row, col, m / std::sqrt(2) / timestep));
 		}
 	}
@@ -189,15 +189,14 @@ void AnimateTargetFunction::calcfxKin(std::shared_ptr<Param> param, Eigen::Vecto
 {
 	shared_ptr<DeformParam> xparam = static_pointer_cast<DeformParam, Param>(param);
 	std::vector<Node *> nodes = xparam->nodes;
-	int index = kin_begin;
 	Vector3d kinTerm;
 
-	for(int n_i = 0; n_i < nodes.size(); n_i++, index += 3)
+	for(int n_i = 0; n_i < nodes.size(); n_i++)
 	{
 		kinTerm = m * ((nodes[n_i]->getTranslation() - nodes[n_i]->getTranslationFrame()) / timestep - nodes[n_i]->getVelocityFrame()) / std::sqrt(2);
-		fx[index + 0] = kinTerm(0);
-		fx[index + 1] = kinTerm(1);
-		fx[index + 2] = kinTerm(2);
+		fx[kin_begin + 3 * n_i + 0] = kinTerm(0);
+		fx[kin_begin + 3 * n_i + 1] = kinTerm(1);
+		fx[kin_begin + 3 * n_i + 2] = kinTerm(2);
 	}
 }
 

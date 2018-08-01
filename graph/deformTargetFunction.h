@@ -28,7 +28,7 @@ public:
 
 	int reg_begin;
 	int con_begin;
-	int line_search_iter = 8;
+	int line_search_iter = 20;
 	int line_search_upper_bound = 4;
 
 protected:

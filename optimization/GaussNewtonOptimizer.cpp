@@ -26,14 +26,12 @@ bool GaussNewtonOptimizer::solveSingleFrame(std::shared_ptr<ResidualFunction> f,
 	double Fx = 0.0, Fx_old = 0.0;
   	SimplicialLDLT<SparseMatrix<double>> chol;
 
-  	VectorXd fx;
-
   	int i = 0;
   	for(i = 0; i < max_iter; i++)
   	{
 	  	// Perform a single step in Gauss-Newton Method
 		SparseMd Jf = tf->calcJf(xparam);
-		fx = tf->calcfx(xparam);
+		VectorXd fx = tf->calcfx(xparam);
 
 		VectorXd delta = descentDirection(Jf, fx, chol, false);
 
@@ -47,9 +45,9 @@ bool GaussNewtonOptimizer::solveSingleFrame(std::shared_ptr<ResidualFunction> f,
 		cout << "deltaFx.maxCoeff() = " << deltaFx.maxCoeff() << " threshold = " << std::cbrt(epsilon) * (1.0 + Fx) << endl;
 		cout << "delta.maxCoeff()   = " << delta.maxCoeff() << " threshold = " << std::sqrt(epsilon) * (1.0 + delta.maxCoeff()) << endl;
 
-		if(std::fabs(Fx - Fx_old) < epsilon * (1.0 + Fx) /*&&
+		if(std::fabs(Fx - Fx_old) < epsilon * (1.0 + Fx) &&
 		   deltaFx.maxCoeff() < std::cbrt(epsilon) * (1.0 + Fx) &&
-		   delta.maxCoeff() < std::sqrt(epsilon) * (1.0 + delta.maxCoeff())*/)
+		   delta.maxCoeff() < std::sqrt(epsilon) * (1.0 + delta.maxCoeff()))
 		{
 			stopped = true;
 			cout << "Exit at " << i << "-th iteration" << endl << endl;
@@ -63,6 +61,7 @@ bool GaussNewtonOptimizer::solveSingleFrame(std::shared_ptr<ResidualFunction> f,
   	updateFrame(xparam);
 
  #ifdef DEBUG
+  		VectorXd fx = tf->calcfx(xparam);
 		VectorXd fx_Ep = fx.segment(0, tf->kin_begin);
 		VectorXd fx_rot = fx.segment(0, tf->reg_begin);
 		VectorXd fx_reg = fx.segment(tf->reg_begin, tf->con_begin - tf->reg_begin);
@@ -75,7 +74,7 @@ bool GaussNewtonOptimizer::solveSingleFrame(std::shared_ptr<ResidualFunction> f,
 		double Fx_con = fx_con.transpose() * fx_con;
 		double Fx_Ek = fx_Ek.transpose() * fx_Ek;
 		double Fx_gv  = fx_gv.transpose() * fx_gv;
-		double samplePos = nodes[4]->getTranslationFrame()[1];
+		double samplePos = nodes[0]->getTranslationFrame()[1] + nodes[10]->getTranslationFrame()[1];
 		double sampleVelocity = nodes[4]->getVelocityFrame()[1];
 		cout << "Fx     = " << Fx << endl;
 		cout << "Fx_Ep  = " << Fx_Ep << endl;

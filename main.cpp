@@ -512,7 +512,7 @@ void display()
     phong.SetVector3f("material.specular", glm::vec3(0.06f, 0.08f, 0.1f));
     phong.SetFloat("material.shininess", 0.0f);
     Model *deformModel = ResourceManager::GetModel("deform_" + modelName);
-    // deformModel->Draw(phong);
+    deformModel->Draw(phong);
 
 }
 

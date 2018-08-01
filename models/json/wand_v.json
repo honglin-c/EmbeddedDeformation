@@ -1,9 +1,9 @@
 {
 	"weight": {
 		"w_rot": 1.0,
-		"w_reg": 30.0,
+		"w_reg": 10.0,
 		"w_con": 100.0,
-		"w_gv": 0.5
+		"w_gv": 0.3
 	},
 	"iteration": {
 		"line_search_iter": 8,

@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #define MAX_NUM 50
-#define SAMPLE_STEP 5
+#define SAMPLE_STEP 2
 using namespace std;
 
 void createObj(void)

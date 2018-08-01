@@ -34,7 +34,7 @@ private:
 	const double m = 1.0; // M = m^2 * I
 	const double g = 9.80665;
 	double gravity = g;
-	const double default_height = 20.0;
+	const double default_height = 100.0;
 	// Calculate Kinetic Energy in fx and Jf
 	void calcJfKin(std::shared_ptr<Param> param, std::vector<Tf> &tripletList);
 

@@ -33,7 +33,7 @@ public:
 	bool solveSingleFrame(std::shared_ptr<ResidualFunction> f, std::shared_ptr<Param> param);
 
 private:
-	const int 	 max_iter = 64;
+	const int 	 max_iter = 50;
 	const double epsilon = 1e-5;
 	const int 	 x_rt = 12;
 	const double c1 = 1e-4;
