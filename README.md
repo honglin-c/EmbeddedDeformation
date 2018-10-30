@@ -1,10 +1,22 @@
-
-
-##EmbeddedDeformation
+#EmbeddedDeformation
 
 A c++ implementation of _Embedded Deformation for Shape Manipulation(Siggraph 2007)_.
 
 ![EmbeddedDeform](assets/EmbeddedDeform.png)
+
+###Dependency
+
+* OpenGL 3.3
+
+*  Eigen 3.3.4
+
+* glm 0.9.8
+
+* glfw 3.2.1
+
+* glew 2.1.0
+
+* Assimp
 
 ### To-do list
 
